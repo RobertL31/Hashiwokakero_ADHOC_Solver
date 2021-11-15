@@ -11,6 +11,7 @@
         "islands" : [
             {
                 "uuid" : 0,
+                "population" : 1,
                 "coordinates" : {
                     "i" : 0,
                     "j" : 1
@@ -19,6 +20,7 @@
             }, 
             {
                 "uuid" : 1,
+                "population" : 2,
                 "coordinates" : {
                     "i" : 1,
                     "j" : 1
@@ -27,6 +29,7 @@
             },
             {
                 "uuid" : 2,
+                "population" : 3,
                 "coordinates" : {
                     "i" : 1,
                     "j" : 3
@@ -35,6 +38,7 @@
             },
             {
                 "uuid" : 3,
+                "population" : 1,
                 "coordinates" : {
                     "i" : 2,
                     "j" : 2
@@ -43,6 +47,7 @@
             },
             {
                 "uuid" : 4,
+                "population" : 1,
                 "coordinates" : {
                     "i" : 3,
                     "j" : 0
@@ -51,6 +56,7 @@
             }, 
             {
                 "uuid" : 5,
+                "population" : 3,
                 "coordinates" : {
                     "i" : 3,
                     "j" : 2
@@ -59,6 +65,7 @@
             },
             {
                 "uuid" : 6,
+                "population" : 4,
                 "coordinates" : {
                     "i" : 3,
                     "j" : 3
