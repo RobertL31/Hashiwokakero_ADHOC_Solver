@@ -1,15 +1,36 @@
-#include <set>
+#include "pistache/endpoint.h"
+#include "json.hpp"
+#include <iostream>
 
-int main(int argc, char *argv[]){
-}
+using namespace std;
+using namespace Pistache;
 
-bool validate(){
+using json = nlohmann::json;
 
+class HelloHandler : public Http::Handler
+{
+public:
+    HTTP_PROTOTYPE(HelloHandler)
+
+    void onRequest(const Http::Request& /*request*/, Http::ResponseWriter response) override
+    {
+        response.send(Pistache::Http::Code::Ok, "Hello World\n");
+    }
+};
+
+int main()
+{
+    json j;
+    j["coucou"] = 3;
     
-    set<int> graph[] = new set<int>[];
-    set<int> m_neighbors;
-    bool marked;
+    Pistache::Address addr(Pistache::Ipv4::any(), Pistache::Port(50500));
+    auto opts = Pistache::Http::Endpoint::options()
+                    .threads(1);
+
+    Http::Endpoint server(addr);
+    server.init(opts);
+    server.setHandler(Http::make_handler<HelloHandler>());
+    
+    cout << "Server listening on PORT 50500 : " << j["coucou"] << endl;
+    server.serve();
 }
-
-
-
