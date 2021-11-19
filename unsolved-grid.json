@@ -1,7 +1,7 @@
 {
     "grid" : {
-        "row_number" : 7,
-        "col_number" : 7,
+        "row_number" : 4,
+        "col_number" : 4,
         "description" : [
             [0, 1, 0, 0],
             [0, 2, 0, 3],

@@ -5,8 +5,19 @@
 
 using namespace std;
 using namespace Pistache;
-
 using json = nlohmann::json;
+
+struct Node_t{
+    int nLinks;
+    int* links;
+    bool marked;
+};
+
+Node_t* JsonToNodeArray(json& jsonInput){
+    //TODO
+    return nullptr;
+}
+
 
 class BasicHandler : public Http::Handler
 {
@@ -15,10 +26,25 @@ public:
 
     void onRequest(const Http::Request& request, Http::ResponseWriter response) override
     {
-        json json_request = json::parse(request.body());
-        cout << "received json " << json_request << endl;
-        json_request["param0"] = 1;
-        response.send(Pistache::Http::Code::Ok, json_request.dump(3));
+        if(request.method() != Http::Method::Get){
+            response.send(Pistache::Http::Code::Bad_Request, "Only GET operations with JSON body are accepted\n");
+            return;
+        }
+
+        // false in json::parse indicates that it should not throw exceptions
+        json jsonInput = json::parse(request.body(), nullptr, false);
+        if(jsonInput.is_discarded()){
+            response.send(Pistache::Http::Code::Bad_Request, "Given JSON is not well-formed\n");
+            cout << request.body() << endl;
+            return;
+        }
+
+
+        json jsonIslands = jsonInput["grid"]["islands"];
+        Node_t* node_array = JsonToNodeArray(jsonIslands);
+
+        //cout << "received json :\n" << json_input.dump(4) << endl;
+        response.send(Pistache::Http::Code::Ok, "Your request body was :\n" + jsonInput.dump(4));
     }
 };
 
