@@ -70,7 +70,7 @@
                     "i" : 3,
                     "j" : 3
                 },
-                "connections" : [5,2]
+                "connections" : [5,2,2]
             }
         ]            
     }
