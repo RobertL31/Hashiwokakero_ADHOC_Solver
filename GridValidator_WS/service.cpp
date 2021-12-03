@@ -48,6 +48,7 @@ int ExploreNodeArray(Node_t* nodeArray){
 }
 
 
+
 class BasicHandler : public Http::Handler
 {
 public:
@@ -55,11 +56,8 @@ public:
 
     void onRequest(const Http::Request& request, Http::ResponseWriter response) override
     {
-
-        cout << "Hey" << endl;
-
-        if(request.method() != Http::Method::Get){
-            response.send(Pistache::Http::Code::Bad_Request, "Only GET operations with JSON body are accepted\n");
+        if(request.method() != Http::Method::Post){
+            response.send(Pistache::Http::Code::Bad_Request, "Only POST operations with JSON body are accepted\n");
             return;
         }
 

@@ -1,7 +1,7 @@
 
 FROM ubuntu:20.04
 
-EXPOSE 50500
+EXPOSE 50501
 
 RUN apt-get update
 
