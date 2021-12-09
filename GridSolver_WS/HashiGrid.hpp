@@ -12,17 +12,25 @@ public:
     ~HashiGrid();
 
 
-    void HashiGrid::PrettyPrint(std::ostream& stream) const;
+    void PrettyPrint(std::ostream& stream) const;
+
+    friend std::ostream & operator<<(std::ostream& stream, const HashiGrid& hashiGrid) { 
+        hashiGrid.PrettyPrint(stream);
+        return stream;
+    }
 
 private:
 
     // 1 dimension for efficiency purpose
-    char* m_grid; 
+    int* m_grid; 
     short m_n;
     short m_m;
 
 
+
 };
+
+
 
 
 

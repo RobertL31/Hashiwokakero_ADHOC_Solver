@@ -1,9 +1,12 @@
 #include "pistache/endpoint.h"
 #include "json.hpp"
+
 #include <iostream>
 #include <string>
 #include <set>
 #include <queue>
+
+#include "HashiGrid.hpp"
 
 using namespace std;
 using namespace Pistache;
@@ -31,7 +34,8 @@ public:
             return;
         }
 
-
+        HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
+        cout << *hashi << endl;
 
         response.send(Pistache::Http::Code::Ok , "Error" );
     }
@@ -39,7 +43,7 @@ public:
 
 int main()
 {   
-    Pistache::Address addr(Pistache::Ipv4::any(), Pistache::Port(50500));
+    Pistache::Address addr(Pistache::Ipv4::any(), Pistache::Port(50501));
     auto opts = Pistache::Http::Endpoint::options()
                     .threads(1);
 
