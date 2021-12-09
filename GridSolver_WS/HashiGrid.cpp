@@ -1,45 +1,77 @@
 
 #include "HashiGrid.hpp"
+
 #include <iostream>
+
+
 
 using namespace std;
 using json = nlohmann::json;
 
+
+
 HashiGrid::HashiGrid(const json& jsonGrid){
 
-    m_n = jsonGrid["row_number"];
-    m_m = jsonGrid["col_number"];
-    m_grid = new int[m_n * m_m];
+    N = jsonGrid["row_number"];
+    M = jsonGrid["col_number"];
+    Grid = new int[N * M];
+    BacktrackStack = new stack<Bridge>();
+    ActualDepth = 0;
 
     json gridDescription = jsonGrid["description"];
-    int i = 0;
-    int j = 0;
+    uint i = 0;
+    uint j = 0;
 
     for(auto& line : gridDescription){
         for(auto& tile : line){
-            m_grid[i*m_m +j] = tile.get<int>();
+            Grid[i*M +j] = tile.get<int>();
             ++j;
         }
         ++i;
         j=0;
     }
+
+
+    json islands = jsonGrid["islands"];
+    Islands = new Island*[islands.size()];
+    i = 0;
+    for(auto& island : islands){
+        uint population = island["population"].get<uint>();
+        GridCoords coords = {.i = island["coordinates"]["i"], .j= island["coordinates"]["j"]};
+        Islands[i] = new Island(population, coords);
+    }
+
+}
+
+
+HashiGrid::HashiGrid(const string& filename){
+
+    //TODO
+
 }
 
 HashiGrid::~HashiGrid(){
 
-    free(m_grid);
+    free(Grid);
 }
+
+
+
+void HashiGrid::Build(Bridge b){
+
+}
+
 
 
 void HashiGrid::PrettyPrint(std::ostream& stream) const{
 
-    for(int i=0; i<m_n; ++i) stream << "#";
+    for(int i=0; i<N; ++i) stream << "#";
     stream << '\n';
 
-    for(int i=0; i<m_n; ++i){
-        for(int j=0; j<m_m; ++j){
+    for(int i=0; i<N; ++i){
+        for(int j=0; j<M; ++j){
 
-            int elmt = m_grid[i*m_m + j];
+            int elmt = Grid[i*M + j];
 
             switch(elmt){
                 case -1:
@@ -62,7 +94,7 @@ void HashiGrid::PrettyPrint(std::ostream& stream) const{
         stream << endl;
     }
 
-    for(int i=0; i<m_n; ++i) stream << "#";
+    for(int i=0; i<N; ++i) stream << "#";
     
     stream << '\n';
 }

@@ -3,8 +3,7 @@
 
 #include <iostream>
 #include <string>
-#include <set>
-#include <queue>
+
 
 #include "HashiGrid.hpp"
 
@@ -37,7 +36,8 @@ public:
         HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
         cout << *hashi << endl;
 
-        response.send(Pistache::Http::Code::Ok , "Error" );
+
+        response.send(Pistache::Http::Code::Ok , "Solved" );
     }
 };
 
