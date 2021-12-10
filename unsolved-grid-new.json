@@ -1,0 +1,77 @@
+{
+    "grid" : {
+        "row_number" : 4,
+        "col_number" : 4,
+        "description" : [
+            [-10, 0, -10, -10],
+            [-10, 1, -10, 2],
+            [-10, -10, 3, -10],
+            [4, -10, 5, 6]
+        ], 
+        "islands" : [
+            {
+                "uuid" : 0,
+                "population" : 1,
+                "coordinates" : {
+                    "i" : 0,
+                    "j" : 1
+                },
+                "connections" : []
+            }, 
+            {
+                "uuid" : 1,
+                "population" : 2,
+                "coordinates" : {
+                    "i" : 1,
+                    "j" : 1
+                },
+                "connections" : []
+            },
+            {
+                "uuid" : 2,
+                "population" : 3,
+                "coordinates" : {
+                    "i" : 1,
+                    "j" : 3
+                },
+                "connections" : []
+            },
+            {
+                "uuid" : 3,
+                "population" : 1,
+                "coordinates" : {
+                    "i" : 2,
+                    "j" : 2
+                },
+                "connections" : []
+            },
+            {
+                "uuid" : 4,
+                "population" : 1,
+                "coordinates" : {
+                    "i" : 3,
+                    "j" : 0
+                },
+                "connections" : []
+            }, 
+            {
+                "uuid" : 5,
+                "population" : 4,
+                "coordinates" : {
+                    "i" : 3,
+                    "j" : 2
+                },
+                "connections" : []
+            },
+            {
+                "uuid" : 6,
+                "population" : 4,
+                "coordinates" : {
+                    "i" : 3,
+                    "j" : 3
+                },
+                "connections" : []
+            }
+        ]            
+    }
+}

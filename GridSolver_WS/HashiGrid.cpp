@@ -19,26 +19,31 @@ HashiGrid::HashiGrid(const json& jsonGrid){
     ActualDepth = 0;
 
     json gridDescription = jsonGrid["description"];
-    uint i = 0;
-    uint j = 0;
+    uint lineIndex = 0;
+    uint colIndex = 0;
 
     for(auto& line : gridDescription){
         for(auto& tile : line){
-            Grid[i*M +j] = tile.get<int>();
-            ++j;
+            Grid[lineIndex*M + colIndex] = tile.get<int>();
+            ++colIndex;
         }
-        ++i;
-        j=0;
+        ++lineIndex;
+        colIndex=0;
     }
 
 
     json islands = jsonGrid["islands"];
     Islands = new Island*[islands.size()];
-    i = 0;
+    NumberOfIslands = 0;
     for(auto& island : islands){
         uint population = island["population"].get<uint>();
         GridCoords coords = {.i = island["coordinates"]["i"], .j= island["coordinates"]["j"]};
-        Islands[i] = new Island(population, coords);
+        Islands[NumberOfIslands] = new Island(population, coords);
+        ++NumberOfIslands;
+    }
+
+    for(int i=0; i<NumberOfIslands; ++i){
+        Islands[i]->UpdateReachableIslands(this);
     }
 
 }

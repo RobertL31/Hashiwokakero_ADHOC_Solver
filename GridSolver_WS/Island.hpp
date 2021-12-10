@@ -1,6 +1,7 @@
 #ifndef __ISLAND_H__
 #define __ISLAND_H__
 
+#include "HashiGrid.hpp"
 #include "json.hpp"
 
 struct GridCoords {
@@ -16,13 +17,15 @@ public:
     Island(uint population, GridCoords coords);
     ~Island();
 
+    void UpdateReachableIslands(HashiGrid* hashiGrid);
+
 
 private:
 
     uint Population;
     uint BridgeLeft;
     GridCoords Coords;
-    std::vector<GridCoords> ReachableIslands;
+    std::vector<uint> ReachableIslands;
 
 };
 

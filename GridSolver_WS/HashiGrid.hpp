@@ -42,6 +42,7 @@ private:
     stack<Bridge> BacktrackStack;
     uint ActualDepth;
     Island** Islands;
+    uint NumberOfIslands;
 
 };
 
