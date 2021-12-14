@@ -36,6 +36,8 @@ public:
         HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
         cout << *hashi << endl;
 
+        hashi->Solve(0);
+
 
         response.send(Pistache::Http::Code::Ok , "Solved" );
     }

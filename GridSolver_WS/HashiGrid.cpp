@@ -4,7 +4,6 @@
 #include <iostream>
 
 
-
 using namespace std;
 using json = nlohmann::json;
 
@@ -15,7 +14,7 @@ HashiGrid::HashiGrid(const json& jsonGrid){
     N = jsonGrid["row_number"];
     M = jsonGrid["col_number"];
     Grid = new int[N * M];
-    BacktrackStack = new stack<Bridge>();
+    BacktrackStack = stack<Bridge>();
     ActualDepth = 0;
 
     json gridDescription = jsonGrid["description"];
@@ -38,12 +37,8 @@ HashiGrid::HashiGrid(const json& jsonGrid){
     for(auto& island : islands){
         uint population = island["population"].get<uint>();
         GridCoords coords = {.i = island["coordinates"]["i"], .j= island["coordinates"]["j"]};
-        Islands[NumberOfIslands] = new Island(population, coords);
+        Islands[NumberOfIslands] = new Island(population, coords, this);
         ++NumberOfIslands;
-    }
-
-    for(int i=0; i<NumberOfIslands; ++i){
-        Islands[i]->UpdateReachableIslands(this);
     }
 
 }
@@ -66,6 +61,92 @@ void HashiGrid::Build(Bridge b){
 
 }
 
+
+
+bool HashiGrid::Solve(uint depth){
+
+    for(int i=0; i<NumberOfIslands; ++i){
+        Islands[i]->UpdateReachableIslands();
+        cout << "Island " << i << ": ";
+        for(int j=0; j<Islands[i]->ReachableIslands.size(); ++j){
+            cout << Islands[i]->ReachableIslands[j];
+        }
+        cout << endl;
+    }
+
+    return false;
+
+}
+
+
+
+std::vector<uint> HashiGrid::ReachableIslandsFrom(GridCoords coords){
+
+    std::vector<uint> result;
+
+    // Explore North
+    bool twoPossible = true;
+    for(int i=coords.i-1; i>=0; --i){
+        int elmt = Grid[i * M + coords.j];
+        if(elmt == NORTH) twoPossible = false;
+        else {
+            if(elmt >= 0){
+                result.push_back(elmt);
+                if(twoPossible) result.push_back(elmt);
+            }
+            // If the bridget type is different or we found island
+            break;
+        }
+    }
+
+
+    // Explore South
+    twoPossible = true;
+    for(int i=coords.i+1; i<N; ++i){
+        int elmt = Grid[i * M + coords.j];
+        if(elmt == NORTH) twoPossible = false;
+        else {
+            if(elmt >= 0){
+                result.push_back(elmt);
+                if(twoPossible) result.push_back(elmt);
+            }
+            // If the bridget type is different or we found island
+            break;
+        }
+    }
+
+
+    // Explore East
+    for(int j=coords.j-1; j>=0; --j){
+        int elmt = Grid[coords.i * M + j];
+        if(elmt == WEST) twoPossible = false;
+        else {
+            if(elmt >= 0){
+                result.push_back(elmt);
+                if(twoPossible) result.push_back(elmt);
+            }
+            // If the bridget type is different or we found island
+            break;
+        }
+    }
+
+    
+    // Explore West
+    for(int j=coords.j+1; j<M; ++j){
+        int elmt = Grid[coords.i * M + j];
+        if(elmt == WEST) twoPossible = false;
+        else {
+            if(elmt >= 0){
+                result.push_back(elmt);
+                if(twoPossible) result.push_back(elmt);
+            }
+            // If the bridget type is different or we found island
+            break;
+        }
+    }
+
+    return result;
+}
 
 
 void HashiGrid::PrettyPrint(std::ostream& stream) const{
