@@ -119,6 +119,15 @@ void HashiGrid::Build(Bridge bridge){
 }
 
 
+void HashiGrid::Backtrack(uint depth){
+
+}
+
+
+void HashiGrid::Destroy(Bridge bridge){
+    
+}
+
 
 bool HashiGrid::Solve(uint depth){
 
@@ -240,7 +249,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     return result;
 }
 
-
+//TODO
 bool HashiGrid::AskForValidation(){
 
     json solution;
@@ -259,6 +268,7 @@ bool HashiGrid::AskForValidation(){
     barrier.wait_for(std::chrono::seconds(2));
     client.shutdown();
 
+    return false;
 }
 
 
