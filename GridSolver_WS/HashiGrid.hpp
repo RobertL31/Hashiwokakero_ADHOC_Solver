@@ -29,12 +29,15 @@ public:
     ~HashiGrid();
 
     bool Solve(uint depth);
-    void Backtrack();
+    void Backtrack(uint depth);
     void Build(Bridge bridge);
     void Destroy(Bridge bridge);
 
-    std::vector<uint> ReachableIslandsFrom(GridCoords coords);
-    bool SearchAtCoordinate(BridgeDirection blocking, int* elmt);
+    std::vector<Bridge> GetBuildableBridges();
+    void RemoveBidirectionDuplicates(std::vector<Bridge>& bridges);
+    std::vector<Island*> ReachableIslandsFrom(GridCoords coords);
+    bool AskForValidation();
+    void BuildSolution(nlohmann::json& outJson);
 
     void PrettyPrint(std::ostream& stream) const;
 
@@ -49,7 +52,8 @@ private:
     int* Grid; 
     uint N;
     uint M;
-    std::stack<Bridge> BacktrackStack;
+    std::vector<Bridge> BacktrackStack;
+    std::vector<Bridge> ExplorationStack;
     uint ActualDepth;
     Island** Islands;
     uint NumberOfIslands;

@@ -1,12 +1,22 @@
 
 #include "HashiGrid.hpp"
 
+
+#include <pistache/client.h>
+#include <pistache/http.h>
+#include <pistache/net.h>
+
+
 #include <iostream>
 
 
 using namespace std;
 using json = nlohmann::json;
+using namespace Pistache;
+using namespace Pistache::Http;
 
+const string serverIP = "127.0.0.1:";
+const string serverPort = "50500";
 
 
 HashiGrid::HashiGrid(const json& jsonGrid){
@@ -14,7 +24,8 @@ HashiGrid::HashiGrid(const json& jsonGrid){
     N = jsonGrid["row_number"];
     M = jsonGrid["col_number"];
     Grid = new int[N * M];
-    BacktrackStack = stack<Bridge>();
+    BacktrackStack = vector<Bridge>();
+    ExplorationStack = vector<Bridge>();
     ActualDepth = 0;
 
     json gridDescription = jsonGrid["description"];
@@ -37,7 +48,7 @@ HashiGrid::HashiGrid(const json& jsonGrid){
     for(auto& island : islands){
         uint population = island["population"].get<uint>();
         GridCoords coords = {.i = island["coordinates"]["i"], .j= island["coordinates"]["j"]};
-        Islands[NumberOfIslands] = new Island(population, coords, this);
+        Islands[NumberOfIslands] = new Island(population, coords, this, NumberOfIslands);
         ++NumberOfIslands;
     }
 
@@ -57,32 +68,113 @@ HashiGrid::~HashiGrid(){
 
 
 
-void HashiGrid::Build(Bridge b){
+void HashiGrid::Build(Bridge bridge){
 
+    // Add this Bridge to the stack
+    BacktrackStack.push_back(bridge);
+    GridCoords island1 = bridge.island1->Coords;
+    GridCoords island2 = bridge.island2->Coords;
+
+    // Modify the internal representation
+    int bridgeType;
+    if(island1.i > island2.i){
+        // Build north bridge
+        if(Grid[(island1.i + 1) * M + island1.j] != NORTH) bridgeType = NORTH;
+        else bridgeType = DNORTH;
+
+        for(int i=island1.i-1; i>island2.i; --i){
+            Grid[i*M + island1.j] = NORTH;
+        }
+    } else {
+        if(island1.i < island2.i){
+            // Build south bridge
+            if(Grid[(island1.i - 1) * M + island1.j] != NORTH) bridgeType = NORTH;
+            else bridgeType = DNORTH;
+
+            for(int i=island1.i+1; i<island2.i; ++i){
+                Grid[i*M + island1.j] = NORTH;
+            }
+        } else {
+            if(island1.j > island2.j){
+                // Build west bridge
+                if(Grid[island1.i * M + (island1.j - 1)] != WEST) bridgeType = WEST;
+                else bridgeType = DWEST;
+
+                for(int j=island1.j-1; j>island2.j; --j){
+                    Grid[island1.i*M + j] = WEST;
+                }
+            } else {
+                if(island1.j < island2.j){
+                    // Build west bridge
+                    if(Grid[island1.i * M + (island1.j + 1)] != WEST) bridgeType = WEST;
+                    else bridgeType = DWEST;
+
+                    for(int j=island1.j+1; j>island2.j; ++j){
+                        Grid[island1.i*M + j] = WEST; 
+                    }
+                }
+            }
+        }
+    }
 }
 
 
 
 bool HashiGrid::Solve(uint depth){
 
-    for(int i=0; i<NumberOfIslands; ++i){
-        Islands[i]->UpdateReachableIslands();
-        cout << "Island " << i << ": ";
-        for(int j=0; j<Islands[i]->ReachableIslands.size(); ++j){
-            cout << Islands[i]->ReachableIslands[j];
-        }
-        cout << endl;
+
+    vector<Bridge> buildableBridges;
+    // Computes possible moves
+    buildableBridges = GetBuildableBridges();
+    
+    // We are on a leaf
+    if(buildableBridges.size() == 0){
+        return AskForValidation();
     }
 
-    return false;
+    // We can still explore
+    for(Bridge toBuild : buildableBridges){
+        
+        Build(toBuild);
+        bool isSolved = Solve(depth+1);
 
+        // Subtree has a solution
+        if(isSolved){
+            return true;
+        } 
+
+        // Otherwise, undo the move and try another
+        Backtrack(depth);
+    }
+        
+    // If none of the moves lead to a solution, return false to backtrack higher
+    return false;
 }
 
 
+vector<Bridge> HashiGrid::GetBuildableBridges(){
 
-std::vector<uint> HashiGrid::ReachableIslandsFrom(GridCoords coords){
+    vector<Bridge> buildableBridges;
+    for(int i=0; i<NumberOfIslands; ++i){
+        Islands[i]->UpdateReachableIslands();
+        for(int j=0; j<Islands[i]->ReachableIslands.size(); ++j){
+            Bridge b = {.island1 = Islands[i], .island2 = Islands[i]->ReachableIslands[j], .depth = ActualDepth};
+            Bridge b_bar = {.island1 = Islands[i]->ReachableIslands[j], .island2 = Islands[i], .depth = ActualDepth};
+            // If the opposite bridge is already added
+            if( find(buildableBridges.begin(), buildableBridges.end(), b_bar) == buildableBridges.end() ){
+                buildableBridges.push_back(b);
+            }
+            
+        }
+    }
 
-    std::vector<uint> result;
+    return buildableBridges;
+}
+
+
+std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
+
+    std::vector<Island*> result;
 
     // Explore North
     bool twoPossible = true;
@@ -91,8 +183,8 @@ std::vector<uint> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         if(elmt == NORTH) twoPossible = false;
         else {
             if(elmt >= 0){
-                result.push_back(elmt);
-                if(twoPossible) result.push_back(elmt);
+                result.push_back(Islands[elmt]);
+                if(twoPossible) result.push_back(Islands[elmt]);
             }
             // If the bridget type is different or we found island
             break;
@@ -107,8 +199,8 @@ std::vector<uint> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         if(elmt == NORTH) twoPossible = false;
         else {
             if(elmt >= 0){
-                result.push_back(elmt);
-                if(twoPossible) result.push_back(elmt);
+                result.push_back(Islands[elmt]);
+                if(twoPossible) result.push_back(Islands[elmt]);
             }
             // If the bridget type is different or we found island
             break;
@@ -122,8 +214,8 @@ std::vector<uint> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         if(elmt == WEST) twoPossible = false;
         else {
             if(elmt >= 0){
-                result.push_back(elmt);
-                if(twoPossible) result.push_back(elmt);
+                result.push_back(Islands[elmt]);
+                if(twoPossible) result.push_back(Islands[elmt]);
             }
             // If the bridget type is different or we found island
             break;
@@ -137,8 +229,8 @@ std::vector<uint> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         if(elmt == WEST) twoPossible = false;
         else {
             if(elmt >= 0){
-                result.push_back(elmt);
-                if(twoPossible) result.push_back(elmt);
+                result.push_back(Islands[elmt]);
+                if(twoPossible) result.push_back(Islands[elmt]);
             }
             // If the bridget type is different or we found island
             break;
@@ -146,6 +238,38 @@ std::vector<uint> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     }
 
     return result;
+}
+
+
+bool HashiGrid::AskForValidation(){
+
+    json solution;
+    BuildSolution(solution);
+   
+    const std::string server_address =  serverIP + serverPort + "/";
+    std::cout << "Server address: " << server_address << "\n";
+
+    Http::Experimental::Client client;
+    auto opts = Http::Experimental::Client::options().maxResponseSize(4096);
+    client.init(opts);
+
+    //auto response = client.get(server_address).send();
+    auto response = client.post(server_address).body(solution.dump()).send();
+    Async::Barrier<Http::Response> barrier(response);
+    barrier.wait_for(std::chrono::seconds(2));
+    client.shutdown();
+
+}
+
+
+void HashiGrid::BuildSolution(json& outJson){
+
+    for(auto it=BacktrackStack.begin(); it != BacktrackStack.end(); ++it){
+        vector<uint> tmpVec;
+        tmpVec.push_back(it->island1->ID);
+        tmpVec.push_back(it->island2->ID);
+        outJson["connections"].push_back(tmpVec);
+    }
 }
 
 

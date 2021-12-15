@@ -16,7 +16,7 @@ class Island {
 
 public:
 
-    Island(uint population, GridCoords coords, HashiGrid* grid);
+    Island(uint population, GridCoords coords, HashiGrid* grid, uint id);
     ~Island();
 
     void UpdateReachableIslands();
@@ -26,13 +26,14 @@ public:
 private:
 
     uint Population;
-    uint BridgeLeft;
-    GridCoords Coords;
     HashiGrid* Grid;
 
 public: 
 
-    std::vector<uint> ReachableIslands;
+    uint ID;
+    GridCoords Coords;
+    uint BridgeLeft;
+    std::vector<Island*> ReachableIslands;
 
 };
 
