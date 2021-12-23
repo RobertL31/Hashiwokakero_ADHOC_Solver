@@ -26,7 +26,7 @@ class HashiGrid {
 
 public:
 
-    enum BridgeDirection {WEST = -1, DWEST = -2, NORTH = -3, DNORTH = -4};
+    enum BridgeDirection {WEST = -1, DWEST = -2, NORTH = -3, DNORTH = -4, WATER = -10};
 
     HashiGrid(const nlohmann::json& jsonGrid);
     HashiGrid(const std::string& filename);
@@ -35,7 +35,7 @@ public:
     bool Solve(uint depth);
     void Backtrack(uint depth);
     void Build(Bridge bridge);
-    void Destroy(Bridge bridge);
+    void DestroyLast();
 
     std::vector<Bridge> GetBuildableBridges();
     std::vector<Island*> ReachableIslandsFrom(GridCoords coords);

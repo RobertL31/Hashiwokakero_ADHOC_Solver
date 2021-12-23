@@ -72,10 +72,11 @@ void HashiGrid::Build(Bridge bridge){
 
     // Add this Bridge to the stack
     BacktrackStack.push_back(bridge);
-    GridCoords island1 = bridge.island1->Coords;
-    GridCoords island2 = bridge.island2->Coords;
+    
 
     // Modify the internal representation
+    GridCoords island1 = bridge.island1->Coords;
+    GridCoords island2 = bridge.island2->Coords;
     int bridgeType;
     if(island1.i > island2.i){
         // Build north bridge
@@ -83,7 +84,7 @@ void HashiGrid::Build(Bridge bridge){
         else bridgeType = DNORTH;
 
         for(int i=island1.i-1; i>island2.i; --i){
-            Grid[i*M + island1.j] = NORTH;
+            Grid[i*M + island1.j] = bridgeType;
         }
     } else {
         if(island1.i < island2.i){
@@ -92,7 +93,7 @@ void HashiGrid::Build(Bridge bridge){
             else bridgeType = DNORTH;
 
             for(int i=island1.i+1; i<island2.i; ++i){
-                Grid[i*M + island1.j] = NORTH;
+                Grid[i*M + island1.j] = bridgeType;
             }
         } else {
             if(island1.j > island2.j){
@@ -101,7 +102,7 @@ void HashiGrid::Build(Bridge bridge){
                 else bridgeType = DWEST;
 
                 for(int j=island1.j-1; j>island2.j; --j){
-                    Grid[island1.i*M + j] = WEST;
+                    Grid[island1.i*M + j] = bridgeType;
                 }
             } else {
                 if(island1.j < island2.j){
@@ -110,7 +111,7 @@ void HashiGrid::Build(Bridge bridge){
                     else bridgeType = DWEST;
 
                     for(int j=island1.j+1; j>island2.j; ++j){
-                        Grid[island1.i*M + j] = WEST; 
+                        Grid[island1.i*M + j] = bridgeType; 
                     }
                 }
             }
@@ -121,11 +122,63 @@ void HashiGrid::Build(Bridge bridge){
 
 void HashiGrid::Backtrack(uint depth){
 
+    while(BacktrackStack.back().depth == depth){
+        DestroyLast();
+    }
 }
 
 
-void HashiGrid::Destroy(Bridge bridge){
+void HashiGrid::DestroyLast(){
+
+    // Remove this Bridge from the stack
+    Bridge bridge = BacktrackStack.back();
+    BacktrackStack.pop_back();
     
+
+    // Modify the internal representation
+    GridCoords island1 = bridge.island1->Coords;
+    GridCoords island2 = bridge.island2->Coords;
+    int bridgeType;
+    if(island1.i > island2.i){
+        // Build north bridge
+        if(Grid[(island1.i + 1) * M + island1.j] == DNORTH) bridgeType = NORTH;
+        else bridgeType = WATER;
+
+        for(int i=island1.i-1; i>island2.i; --i){
+            Grid[i*M + island1.j] = bridgeType;
+        }
+    } else {
+        if(island1.i < island2.i){
+            // Build south bridge
+            if(Grid[(island1.i - 1) * M + island1.j] == DNORTH) bridgeType = NORTH;
+            else bridgeType = WATER;
+
+            for(int i=island1.i+1; i<island2.i; ++i){
+                Grid[i*M + island1.j] = bridgeType;
+            }
+        } else {
+            if(island1.j > island2.j){
+                // Build west bridge
+                if(Grid[island1.i * M + (island1.j - 1)] == DWEST) bridgeType = WEST;
+                else bridgeType = WATER;
+
+                for(int j=island1.j-1; j>island2.j; --j){
+                    Grid[island1.i*M + j] = bridgeType;
+                }
+            } else {
+                if(island1.j < island2.j){
+                    // Build west bridge
+                    if(Grid[island1.i * M + (island1.j + 1)] == DWEST) bridgeType = WEST;
+                    else bridgeType = WATER;
+
+                    for(int j=island1.j+1; j>island2.j; ++j){
+                        Grid[island1.i*M + j] = bridgeType; 
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 
