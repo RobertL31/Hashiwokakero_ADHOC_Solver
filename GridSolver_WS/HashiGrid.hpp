@@ -42,6 +42,7 @@ public:
     std::vector<Bridge> GetBuildableBridges(uint depth);
     std::vector<Island*> ReachableIslandsFrom(GridCoords coords);
     bool AskForValidation();
+    bool SelfValidate();
     void BuildSolution(nlohmann::json& outJson);
 
     void PrettyPrint(std::ostream& stream) const;

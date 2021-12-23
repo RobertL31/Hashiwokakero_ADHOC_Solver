@@ -6,7 +6,8 @@
 #include <pistache/http.h>
 #include <pistache/net.h>
 
-
+#include <unordered_set>
+#include <queue>
 #include <iostream>
 
 
@@ -209,7 +210,7 @@ bool HashiGrid::Solve(uint depth){
 
     // We are on a leaf
     if(buildableBridges.size() == 0){
-        return AskForValidation();
+        return SelfValidate();
     }
 
     // We can still explore
@@ -343,6 +344,49 @@ bool HashiGrid::AskForValidation(){
 
     return false;
 }
+
+
+bool HashiGrid::SelfValidate(){
+
+    struct Node_t{
+        unordered_multiset<int> links;
+        bool marked;
+    };
+
+    Node_t* nodeArray = new Node_t[NumberOfIslands];
+    for(Bridge bridge : BacktrackStack){
+        nodeArray[bridge.island1->ID].links.insert(bridge.island2->ID);
+        nodeArray[bridge.island2->ID].links.insert(bridge.island1->ID);
+    }
+
+    bool check = true;
+    // Check if every island has enough connections
+    for(int i=0; i<NumberOfIslands; ++i){
+        check = check && nodeArray[i].links.size() == Islands[i]->Population;
+        if(!check) return false;
+    }
+
+
+    // Check if all island can reach others
+    int reached = 0;
+    queue<Node_t*> toCheck;
+    toCheck.push(&nodeArray[0]);
+
+    while(toCheck.size() != 0){
+        Node_t* actual = toCheck.front();
+        if( !actual->marked){
+            for(const int& next : actual->links){
+                toCheck.push(&nodeArray[next]);
+            }
+            actual->marked = true;
+            ++reached;
+        }
+        toCheck.pop();
+    }
+
+    return check && reached == NumberOfIslands;
+}
+
 
 
 void HashiGrid::BuildSolution(json& outJson){

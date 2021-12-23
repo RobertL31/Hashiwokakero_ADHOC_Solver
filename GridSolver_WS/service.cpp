@@ -39,7 +39,10 @@ public:
         hashi->Solve(0);
 
         cout << *hashi << endl;
-        response.send(Pistache::Http::Code::Ok , "Solved" );
+
+        json outJson;
+        hashi->BuildSolution(outJson);
+        response.send(Pistache::Http::Code::Ok , outJson.dump());
     }
 };
 

@@ -23,11 +23,11 @@ public:
 
 private:
 
-    uint Population;
     HashiGrid* Grid;
 
 public: 
 
+    uint Population;
     uint ID;
     GridCoords Coords;
     uint BridgeLeft;
