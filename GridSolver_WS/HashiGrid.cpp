@@ -6,6 +6,7 @@
 #include <pistache/http.h>
 #include <pistache/net.h>
 
+#include <set>
 #include <unordered_set>
 #include <queue>
 #include <iostream>
@@ -27,21 +28,25 @@ HashiGrid::HashiGrid(const json& jsonGrid){
     Grid = new int[N * M];
     BacktrackStack = vector<Bridge>();
 
-    for(int i=0; i<N*M; ++i){
-        Grid[i] = WATER;
+    json description = jsonGrid["description"];
+    // TODO guard description.size() == N*M
+    for(auto& tileValue : description){
+        if(tileValue.get<int>() > 0) ++NumberOfIslands;
     }
-
-    json islands = jsonGrid["islands"];
-    Islands = new Island*[islands.size()];
+    Islands = new Island*[NumberOfIslands];
+    int i = 0;
     NumberOfIslands = 0;
-    for(auto& island : islands){
-        uint population = island["population"].get<uint>();
-        GridCoords coords = {.i = island["coordinates"]["i"], .j= island["coordinates"]["j"]};
-        Grid[coords.i * N + coords.j] = NumberOfIslands;
-        Islands[NumberOfIslands] = new Island(population, coords, this, NumberOfIslands);
-        ++NumberOfIslands;
-    }
+    for(auto& tileValue : description){
+        uint population = tileValue.get<int>();
+        if(population > 0){
+            Grid[i] = NumberOfIslands;
+            GridCoords coords = {.i = i/M, .j= i%M};
+            Islands[NumberOfIslands] = new Island(population, coords, this, NumberOfIslands);
+            ++NumberOfIslands;
+        } else Grid[i] = WATER;
 
+        ++i;
+    }
 }
 
 
@@ -196,25 +201,27 @@ void HashiGrid::DestroyLast(){
 
 bool HashiGrid::Solve(uint depth){
 
-    if(depth == 15) return true;
-
     vector<Bridge> buildableBridges;
     // Computes possible moves
     buildableBridges = GetBuildableBridges(depth);
     
+    #ifdef HASHI_VERBOSE
     cout << "depth : " << depth << "\n possible bridges :" << buildableBridges.size() << endl;
     cout << *this << endl;
     for(Bridge b : buildableBridges){
         cout << "from " << b.island1->ID << " to " << b.island2->ID << " with depth " << b.depth << endl;
     }
+    #endif
 
     // We are on a leaf
     if(buildableBridges.size() == 0){
         return SelfValidate();
     }
 
+    // Transform into list of unique bridges
+    set<Bridge> uniqueBuildableBridges(buildableBridges.begin(), buildableBridges.end());
     // We can still explore
-    for(Bridge toBuild : buildableBridges){
+    for(Bridge toBuild : uniqueBuildableBridges){
         
         Build(toBuild);
         bool isSolved = Solve(depth+1);
@@ -363,7 +370,10 @@ bool HashiGrid::SelfValidate(){
     // Check if every island has enough connections
     for(int i=0; i<NumberOfIslands; ++i){
         check = check && nodeArray[i].links.size() == Islands[i]->Population;
-        if(!check) return false;
+        if(!check){
+            delete[] nodeArray;
+            return false;
+        }
     }
 
 
@@ -383,6 +393,9 @@ bool HashiGrid::SelfValidate(){
         }
         toCheck.pop();
     }
+
+
+    delete[] nodeArray;
 
     return check && reached == NumberOfIslands;
 }

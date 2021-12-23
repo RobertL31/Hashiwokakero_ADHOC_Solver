@@ -42,6 +42,8 @@ public:
 
         json outJson;
         hashi->BuildSolution(outJson);
+
+        delete hashi;
         response.send(Pistache::Http::Code::Ok , outJson.dump());
     }
 };

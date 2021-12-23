@@ -36,6 +36,21 @@ public:
 };
 
 
+struct Bridge {
+    Island* island1;
+    Island* island2;
+    uint depth;
+
+    friend bool operator==(const Bridge& b1, const Bridge& b2){
+        return b1.island1 == b2.island1 && b1.island2 == b2.island2;
+    }
+
+    friend bool operator<(const Bridge& b1, const Bridge& b2){
+        return b1.island1->ID < b2.island1->ID || b1.island2->ID < b2.island2->ID;
+    }
+};
+
+
 
 
 
