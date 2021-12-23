@@ -13,7 +13,16 @@ Island::Island(uint population, GridCoords coords, HashiGrid* grid, uint id){
 }
 
 
+Island::~Island(){
+
+}
+
+
 void Island::UpdateReachableIslands(){
 
-    ReachableIslands = Grid->ReachableIslandsFrom(Coords);
+    ReachableIslands.clear();
+    if(BridgeLeft > 0){
+        ReachableIslands = Grid->ReachableIslandsFrom(Coords);
+    }
+    
 }

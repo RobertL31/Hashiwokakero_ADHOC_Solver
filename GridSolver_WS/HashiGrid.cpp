@@ -21,26 +21,14 @@ const string serverPort = "50500";
 
 HashiGrid::HashiGrid(const json& jsonGrid){
 
-    N = jsonGrid["row_number"];
-    M = jsonGrid["col_number"];
+    N = jsonGrid["dimension"];
+    M = N;
     Grid = new int[N * M];
     BacktrackStack = vector<Bridge>();
-    ExplorationStack = vector<Bridge>();
-    ActualDepth = 0;
 
-    json gridDescription = jsonGrid["description"];
-    uint lineIndex = 0;
-    uint colIndex = 0;
-
-    for(auto& line : gridDescription){
-        for(auto& tile : line){
-            Grid[lineIndex*M + colIndex] = tile.get<int>();
-            ++colIndex;
-        }
-        ++lineIndex;
-        colIndex=0;
+    for(int i=0; i<N*M; ++i){
+        Grid[i] = WATER;
     }
-
 
     json islands = jsonGrid["islands"];
     Islands = new Island*[islands.size()];
@@ -48,6 +36,7 @@ HashiGrid::HashiGrid(const json& jsonGrid){
     for(auto& island : islands){
         uint population = island["population"].get<uint>();
         GridCoords coords = {.i = island["coordinates"]["i"], .j= island["coordinates"]["j"]};
+        Grid[coords.i * N + coords.j] = NumberOfIslands;
         Islands[NumberOfIslands] = new Island(population, coords, this, NumberOfIslands);
         ++NumberOfIslands;
     }
@@ -63,7 +52,11 @@ HashiGrid::HashiGrid(const string& filename){
 
 HashiGrid::~HashiGrid(){
 
-    free(Grid);
+    delete Grid;
+    for(int i=0; i<NumberOfIslands; ++i){
+        delete Islands[i];
+    }
+    delete[] Islands;
 }
 
 
@@ -72,7 +65,10 @@ void HashiGrid::Build(Bridge bridge){
 
     // Add this Bridge to the stack
     BacktrackStack.push_back(bridge);
-    
+
+    // Update islands informations
+    bridge.island1->BridgeLeft--;
+    bridge.island2->BridgeLeft--;
 
     // Modify the internal representation
     GridCoords island1 = bridge.island1->Coords;
@@ -80,8 +76,8 @@ void HashiGrid::Build(Bridge bridge){
     int bridgeType;
     if(island1.i > island2.i){
         // Build north bridge
-        if(Grid[(island1.i + 1) * M + island1.j] != NORTH) bridgeType = NORTH;
-        else bridgeType = DNORTH;
+        if(Grid[(island1.i - 1) * M + island1.j] == NORTH) bridgeType = DNORTH;
+        else bridgeType = NORTH;
 
         for(int i=island1.i-1; i>island2.i; --i){
             Grid[i*M + island1.j] = bridgeType;
@@ -89,8 +85,8 @@ void HashiGrid::Build(Bridge bridge){
     } else {
         if(island1.i < island2.i){
             // Build south bridge
-            if(Grid[(island1.i - 1) * M + island1.j] != NORTH) bridgeType = NORTH;
-            else bridgeType = DNORTH;
+            if(Grid[(island1.i + 1) * M + island1.j] == NORTH) bridgeType = DNORTH;
+            else bridgeType = NORTH;
 
             for(int i=island1.i+1; i<island2.i; ++i){
                 Grid[i*M + island1.j] = bridgeType;
@@ -98,8 +94,8 @@ void HashiGrid::Build(Bridge bridge){
         } else {
             if(island1.j > island2.j){
                 // Build west bridge
-                if(Grid[island1.i * M + (island1.j - 1)] != WEST) bridgeType = WEST;
-                else bridgeType = DWEST;
+                if(Grid[island1.i * M + (island1.j - 1)] == WEST) bridgeType = DWEST;
+                else bridgeType = WEST;
 
                 for(int j=island1.j-1; j>island2.j; --j){
                     Grid[island1.i*M + j] = bridgeType;
@@ -107,20 +103,28 @@ void HashiGrid::Build(Bridge bridge){
             } else {
                 if(island1.j < island2.j){
                     // Build west bridge
-                    if(Grid[island1.i * M + (island1.j + 1)] != WEST) bridgeType = WEST;
-                    else bridgeType = DWEST;
+                    if(Grid[island1.i * M + (island1.j + 1)] == WEST) bridgeType = DWEST;
+                    else bridgeType = WEST;
 
-                    for(int j=island1.j+1; j>island2.j; ++j){
+                    for(int j=island1.j+1; j<island2.j; ++j){
                         Grid[island1.i*M + j] = bridgeType; 
                     }
                 }
             }
         }
     }
+
+    #ifdef HASHI_VERBOSE
+    cout << "Built bridge from " << bridge.island1->ID << " to " << bridge.island2->ID << " at depth " << bridge.depth << endl; 
+    #endif
 }
 
 
 void HashiGrid::Backtrack(uint depth){
+
+    #ifdef HASHI_VERBOSE
+    cout << "Backtracking to a depth of " << depth << endl;
+    #endif
 
     while(BacktrackStack.back().depth == depth){
         DestroyLast();
@@ -133,15 +137,18 @@ void HashiGrid::DestroyLast(){
     // Remove this Bridge from the stack
     Bridge bridge = BacktrackStack.back();
     BacktrackStack.pop_back();
-    
 
+    // Update islands informations
+    bridge.island1->BridgeLeft++;
+    bridge.island2->BridgeLeft++;
+    
     // Modify the internal representation
     GridCoords island1 = bridge.island1->Coords;
     GridCoords island2 = bridge.island2->Coords;
     int bridgeType;
     if(island1.i > island2.i){
         // Build north bridge
-        if(Grid[(island1.i + 1) * M + island1.j] == DNORTH) bridgeType = NORTH;
+        if(Grid[(island1.i - 1) * M + island1.j] == DNORTH) bridgeType = NORTH;
         else bridgeType = WATER;
 
         for(int i=island1.i-1; i>island2.i; --i){
@@ -150,7 +157,7 @@ void HashiGrid::DestroyLast(){
     } else {
         if(island1.i < island2.i){
             // Build south bridge
-            if(Grid[(island1.i - 1) * M + island1.j] == DNORTH) bridgeType = NORTH;
+            if(Grid[(island1.i + 1) * M + island1.j] == DNORTH) bridgeType = NORTH;
             else bridgeType = WATER;
 
             for(int i=island1.i+1; i<island2.i; ++i){
@@ -171,7 +178,7 @@ void HashiGrid::DestroyLast(){
                     if(Grid[island1.i * M + (island1.j + 1)] == DWEST) bridgeType = WEST;
                     else bridgeType = WATER;
 
-                    for(int j=island1.j+1; j>island2.j; ++j){
+                    for(int j=island1.j+1; j<island2.j; ++j){
                         Grid[island1.i*M + j] = bridgeType; 
                     }
                 }
@@ -179,16 +186,27 @@ void HashiGrid::DestroyLast(){
         }
     }
 
+    #ifdef HASHI_VERBOSE
+    cout << "Removed bridge from " << bridge.island1->ID << " to " << bridge.island2->ID << " at depth " << bridge.depth << endl; 
+    #endif
+
 }
 
 
 bool HashiGrid::Solve(uint depth){
 
+    if(depth == 15) return true;
 
     vector<Bridge> buildableBridges;
     // Computes possible moves
-    buildableBridges = GetBuildableBridges();
+    buildableBridges = GetBuildableBridges(depth);
     
+    cout << "depth : " << depth << "\n possible bridges :" << buildableBridges.size() << endl;
+    cout << *this << endl;
+    for(Bridge b : buildableBridges){
+        cout << "from " << b.island1->ID << " to " << b.island2->ID << " with depth " << b.depth << endl;
+    }
+
     // We are on a leaf
     if(buildableBridges.size() == 0){
         return AskForValidation();
@@ -214,14 +232,14 @@ bool HashiGrid::Solve(uint depth){
 }
 
 
-vector<Bridge> HashiGrid::GetBuildableBridges(){
+vector<Bridge> HashiGrid::GetBuildableBridges(uint depth){
 
     vector<Bridge> buildableBridges;
     for(int i=0; i<NumberOfIslands; ++i){
         Islands[i]->UpdateReachableIslands();
         for(int j=0; j<Islands[i]->ReachableIslands.size(); ++j){
-            Bridge b = {.island1 = Islands[i], .island2 = Islands[i]->ReachableIslands[j], .depth = ActualDepth};
-            Bridge b_bar = {.island1 = Islands[i]->ReachableIslands[j], .island2 = Islands[i], .depth = ActualDepth};
+            Bridge b = {.island1 = Islands[i], .island2 = Islands[i]->ReachableIslands[j], .depth = depth};
+            Bridge b_bar = {.island1 = Islands[i]->ReachableIslands[j], .island2 = Islands[i], .depth = depth};
             // If the opposite bridge is already added
             if( find(buildableBridges.begin(), buildableBridges.end(), b_bar) == buildableBridges.end() ){
                 buildableBridges.push_back(b);
@@ -243,13 +261,15 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     for(int i=coords.i-1; i>=0; --i){
         int elmt = Grid[i * M + coords.j];
         if(elmt == NORTH) twoPossible = false;
+        else if(elmt == DNORTH) break;
         else {
-            if(elmt >= 0){
+            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible) result.push_back(Islands[elmt]);
+                break;
             }
-            // If the bridget type is different or we found island
-            break;
+        
+            
         }
     }
 
@@ -259,43 +279,43 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     for(int i=coords.i+1; i<N; ++i){
         int elmt = Grid[i * M + coords.j];
         if(elmt == NORTH) twoPossible = false;
+        else if(elmt == DNORTH) break;
         else {
-            if(elmt >= 0){
+            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible) result.push_back(Islands[elmt]);
+                break;
             }
-            // If the bridget type is different or we found island
-            break;
         }
     }
 
 
-    // Explore East
+    // Explore West
     for(int j=coords.j-1; j>=0; --j){
         int elmt = Grid[coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
+        else if(elmt == DWEST) break;
         else {
-            if(elmt >= 0){
+            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible) result.push_back(Islands[elmt]);
+                break;
             }
-            // If the bridget type is different or we found island
-            break;
         }
     }
 
     
-    // Explore West
+    // Explore East
     for(int j=coords.j+1; j<M; ++j){
         int elmt = Grid[coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
+        else if(elmt == DWEST) break;
         else {
-            if(elmt >= 0){
+            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible) result.push_back(Islands[elmt]);
+                break;
             }
-            // If the bridget type is different or we found island
-            break;
         }
     }
 
@@ -347,17 +367,20 @@ void HashiGrid::PrettyPrint(std::ostream& stream) const{
             int elmt = Grid[i*M + j];
 
             switch(elmt){
-                case -1:
+                case WEST:
                     stream << "―";
                     break;
-                case -2:
+                case DWEST:
                     stream << "═";
                     break;
-                case -3:
+                case NORTH:
                     stream << "|";
                     break;
-                case -4:
+                case DNORTH:
                     stream << "ǁ";
+                    break;
+                case WATER: 
+                    stream << ".";
                     break;
 
                 default:

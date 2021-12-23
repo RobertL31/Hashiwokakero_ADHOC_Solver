@@ -19,6 +19,7 @@ struct Bridge {
     friend bool operator==(const Bridge& b1, const Bridge& b2){
         return b1.island1 == b2.island1 && b1.island2 == b2.island2;
     }
+
 };
 
 
@@ -26,7 +27,8 @@ class HashiGrid {
 
 public:
 
-    enum BridgeDirection {WEST = -1, DWEST = -2, NORTH = -3, DNORTH = -4, WATER = -10};
+    // Defines the tile type for non-island tiles
+    enum TileType {WEST = -1, DWEST = -2, NORTH = -3, DNORTH = -4, WATER = -10};
 
     HashiGrid(const nlohmann::json& jsonGrid);
     HashiGrid(const std::string& filename);
@@ -37,7 +39,7 @@ public:
     void Build(Bridge bridge);
     void DestroyLast();
 
-    std::vector<Bridge> GetBuildableBridges();
+    std::vector<Bridge> GetBuildableBridges(uint depth);
     std::vector<Island*> ReachableIslandsFrom(GridCoords coords);
     bool AskForValidation();
     void BuildSolution(nlohmann::json& outJson);
@@ -56,8 +58,6 @@ private:
     uint N;
     uint M;
     std::vector<Bridge> BacktrackStack;
-    std::vector<Bridge> ExplorationStack;
-    uint ActualDepth;
     Island** Islands;
     uint NumberOfIslands;
 

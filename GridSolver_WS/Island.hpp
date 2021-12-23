@@ -2,7 +2,6 @@
 #define __ISLAND_H__
 
 #include "HashiGrid.hpp"
-#include "json.hpp"
 
 class HashiGrid;
 
@@ -21,7 +20,6 @@ public:
 
     void UpdateReachableIslands();
     void RemoveFromReachable(uint islandID);
-
 
 private:
 

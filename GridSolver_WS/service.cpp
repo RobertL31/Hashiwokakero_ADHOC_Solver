@@ -38,7 +38,7 @@ public:
 
         hashi->Solve(0);
 
-
+        cout << *hashi << endl;
         response.send(Pistache::Http::Code::Ok , "Solved" );
     }
 };
@@ -52,7 +52,7 @@ int main()
     Http::Endpoint server(addr);
     server.init(opts);
     server.setHandler(Http::make_handler<BasicHandler>());
-    
+
     cout << "Server listening on PORT 50501 : " << endl;
     server.serve();
 }
