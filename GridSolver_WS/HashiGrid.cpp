@@ -198,9 +198,12 @@ void HashiGrid::DestroyLast(){
 
 }
 
+long nodes = 0;
+long leafs = 0;
 
 bool HashiGrid::Solve(uint depth){
 
+    ++nodes;
     vector<Bridge> buildableBridges;
     // Computes possible moves
     buildableBridges = GetBuildableBridges(depth);
@@ -275,9 +278,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
                 result.push_back(Islands[elmt]);
                 if(twoPossible) result.push_back(Islands[elmt]);
                 break;
-            }
-        
-            
+            } 
         }
     }
 
@@ -355,15 +356,17 @@ bool HashiGrid::AskForValidation(){
 
 bool HashiGrid::SelfValidate(){
 
+    ++leafs;
+
     struct Node_t{
-        unordered_multiset<int> links;
+        vector<int> links;
         bool marked;
     };
 
-    Node_t* nodeArray = new Node_t[NumberOfIslands];
+    Node_t nodeArray[NumberOfIslands];
     for(Bridge bridge : BacktrackStack){
-        nodeArray[bridge.island1->ID].links.insert(bridge.island2->ID);
-        nodeArray[bridge.island2->ID].links.insert(bridge.island1->ID);
+        nodeArray[bridge.island1->ID].links.push_back(bridge.island2->ID);
+        nodeArray[bridge.island2->ID].links.push_back(bridge.island1->ID);
     }
 
     bool check = true;
@@ -371,7 +374,6 @@ bool HashiGrid::SelfValidate(){
     for(int i=0; i<NumberOfIslands; ++i){
         check = check && nodeArray[i].links.size() == Islands[i]->Population;
         if(!check){
-            delete[] nodeArray;
             return false;
         }
     }
@@ -393,9 +395,6 @@ bool HashiGrid::SelfValidate(){
         }
         toCheck.pop();
     }
-
-
-    delete[] nodeArray;
 
     return check && reached == NumberOfIslands;
 }
