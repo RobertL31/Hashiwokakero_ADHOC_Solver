@@ -34,6 +34,10 @@ public:
     bool SelfValidate();
     void BuildSolution(nlohmann::json& outJson);
 
+    bool Simplify(uint depth);
+    bool JustEnoughNeighbors(uint depth);
+    bool OnlyFewNeighbors(uint depth);
+
     void PrettyPrint(std::ostream& stream) const;
 
     friend std::ostream & operator<<(std::ostream& stream, const HashiGrid& hashiGrid) { 

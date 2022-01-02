@@ -40,8 +40,7 @@ HashiGrid::HashiGrid(const json& jsonGrid){
         uint population = tileValue.get<int>();
         if(population > 0){
             Grid[i] = NumberOfIslands;
-            GridCoords coords = {.i = i/M, .j= i%M};
-            Islands[NumberOfIslands] = new Island(population, coords, this, NumberOfIslands);
+            Islands[NumberOfIslands] = new Island(population, GridCoords(i/M, i%M), this, NumberOfIslands);
             ++NumberOfIslands;
         } else Grid[i] = WATER;
 
@@ -66,11 +65,20 @@ HashiGrid::~HashiGrid(){
 }
 
 
+void MyError(){
+    int* a = (int*) malloc(sizeof(int));
+    a[-1] = 0;
+}
 
 void HashiGrid::Build(Bridge bridge){
 
     // Add this Bridge to the stack
     BacktrackStack.push_back(bridge);
+
+    if(bridge.island1->BridgeLeft > 8 || bridge.island1->BridgeLeft == 0 
+    || bridge.island2->BridgeLeft > 8 || bridge.island2->BridgeLeft == 0){
+        MyError();
+    }
 
     // Update islands informations
     bridge.island1->BridgeLeft--;
@@ -203,28 +211,43 @@ long leafs = 0;
 
 bool HashiGrid::Solve(uint depth){
 
-    ++nodes;
+    //if(nodes >  20) return false;
+
+    /////////// SIMPLIFY THE GRID //////////////
+    // Many simplifications can be done at a certain depth.
+    // It allows backtrack to remove all of them we getting back to previous depth.
+
+    bool couldSimplify;
+    do {
+        for(int i=0; i<NumberOfIslands; ++i){
+            Islands[i]->UpdateReachableIslands();
+        }
+
+        couldSimplify = Simplify(depth);
+
+    } while(couldSimplify);  
+    ////////////////////////////////////////////
+    
     vector<Bridge> buildableBridges;
     // Computes possible moves
     buildableBridges = GetBuildableBridges(depth);
     
     #ifdef HASHI_VERBOSE
+    ++nodes;
     cout << "depth : " << depth << "\n possible bridges :" << buildableBridges.size() << endl;
     cout << *this << endl;
     for(Bridge b : buildableBridges){
         cout << "from " << b.island1->ID << " to " << b.island2->ID << " with depth " << b.depth << endl;
     }
     #endif
-
+    
     // We are on a leaf
     if(buildableBridges.size() == 0){
         return SelfValidate();
     }
 
-    // Transform into list of unique bridges
-    set<Bridge> uniqueBuildableBridges(buildableBridges.begin(), buildableBridges.end());
     // We can still explore
-    for(Bridge toBuild : uniqueBuildableBridges){
+    for(Bridge toBuild : buildableBridges){
         
         Build(toBuild);
         bool isSolved = Solve(depth+1);
@@ -237,25 +260,111 @@ bool HashiGrid::Solve(uint depth){
         // Otherwise, undo the move and try another
         Backtrack(depth);
     }
-        
+
     // If none of the moves lead to a solution, return false to backtrack higher
     return false;
+    
 }
+
+
+
+bool HashiGrid::Simplify(uint depth){
+
+    #ifdef HASHI_VERBOSE
+    cout << "Trying to simplify the grid ..." << endl;
+    bool JEN = JustEnoughNeighbors(depth);
+    std::string JEN_str = JEN ? "true" : "false";
+    cout << "JustEnoughNeighbors : " << JEN_str << endl;
+    if(JEN){
+        cout << "Skipping OnlyFewNeighbors" << endl << "Could simplify the grid !" << endl;
+        return true;
+    } 
+
+    bool OFN = OnlyFewNeighbors(depth);
+    std::string OFN_str = OFN ? "true" : "false";
+    cout << "OnlyFewNeighbors : " << OFN_str << endl;
+    if(OFN){
+        cout << "Could simplify the grid !" << endl;
+        return true;
+    }
+    
+    return false;
+
+    #else
+
+    // The call order is important as it makes a priority order
+    return JustEnoughNeighbors(depth) || OnlyFewNeighbors(depth);
+
+    #endif
+}
+
+
+bool HashiGrid::JustEnoughNeighbors(uint depth){
+
+    Island* source;
+    for(int i=0; i<NumberOfIslands; ++i){
+
+        source = Islands[i];
+
+        #ifdef HASHI_VERBOSE
+        cout << "Looking at island " << i << " with " << source->BridgeLeft << 
+        " bridges left and " <<  source->ReachableIslands.size() << " possibilities" << endl;
+        #endif
+
+        // If there is the exact number of bridges to build, build them
+        if(source->BridgeLeft > 0 && source->ReachableIslands.size() == source->BridgeLeft){
+            for(Island* destination : source->ReachableIslands){
+                // We build the bridge here, its destruction is managed through Backtrack() in Solve loop
+                Build(Bridge(source ,destination, depth));
+            }
+
+            // If we could find an island, return to update grid state
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool HashiGrid::OnlyFewNeighbors(uint depth){
+
+    Island* source;
+    for(int i=0; i<NumberOfIslands; ++i){
+        source = Islands[i];
+        // If we know there is at least one bridge in each direction, build them
+        if( source->BridgeLeft > 0 && (source->ReachableIslands.size()*2) - 1 == source->BridgeLeft){
+            // We only want once each destination Island, not to build double bridges (JEN can do it)
+            set<Island*> oneEachDirection(source->ReachableIslands.begin(), source->ReachableIslands.end());
+            for(Island* destination : oneEachDirection){
+                // We build the bridge here, its destruction is managed through Backtrack() in Solve loop
+                Build(Bridge(source ,destination, depth));
+            }
+
+            // If we could find an island, return to update grid state
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 
 vector<Bridge> HashiGrid::GetBuildableBridges(uint depth){
 
     vector<Bridge> buildableBridges;
+    set<Bridge> forbiddenBridges;
+    Island* source;
     for(int i=0; i<NumberOfIslands; ++i){
-        Islands[i]->UpdateReachableIslands();
-        for(int j=0; j<Islands[i]->ReachableIslands.size(); ++j){
-            Bridge b = {.island1 = Islands[i], .island2 = Islands[i]->ReachableIslands[j], .depth = depth};
-            Bridge b_bar = {.island1 = Islands[i]->ReachableIslands[j], .island2 = Islands[i], .depth = depth};
-            // If the opposite bridge is already added
-            if( find(buildableBridges.begin(), buildableBridges.end(), b_bar) == buildableBridges.end() ){
-                buildableBridges.push_back(b);
-            }
-            
+        source = Islands[i];
+        set<Island*> uniqueReachableIslands(source->ReachableIslands.begin(), source->ReachableIslands.end());
+        for(Island* destination : uniqueReachableIslands){
+            Bridge forbiddenBridge = Bridge(destination, source, depth);
+            if( forbiddenBridges.find(forbiddenBridge) == forbiddenBridges.end()){
+                Bridge toBuild(source, destination, depth);
+                forbiddenBridges.insert(toBuild);
+                buildableBridges.push_back(toBuild);
+            }         
         }
     }
 
@@ -268,7 +377,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     std::vector<Island*> result;
 
     // Explore North
-    bool twoPossible = true;
+    bool twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
     for(int i=coords.i-1; i>=0; --i){
         int elmt = Grid[i * M + coords.j];
         if(elmt == NORTH) twoPossible = false;
@@ -276,7 +385,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         else {
             if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
-                if(twoPossible) result.push_back(Islands[elmt]);
+                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
             } 
         }
@@ -284,7 +393,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
 
 
     // Explore South
-    twoPossible = true;
+    twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
     for(int i=coords.i+1; i<N; ++i){
         int elmt = Grid[i * M + coords.j];
         if(elmt == NORTH) twoPossible = false;
@@ -292,7 +401,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         else {
             if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
-                if(twoPossible) result.push_back(Islands[elmt]);
+                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
             }
         }
@@ -300,6 +409,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
 
 
     // Explore West
+    twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
     for(int j=coords.j-1; j>=0; --j){
         int elmt = Grid[coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
@@ -307,7 +417,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         else {
             if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
-                if(twoPossible) result.push_back(Islands[elmt]);
+                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
             }
         }
@@ -315,6 +425,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
 
     
     // Explore East
+    twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
     for(int j=coords.j+1; j<M; ++j){
         int elmt = Grid[coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
@@ -322,7 +433,7 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
         else {
             if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
-                if(twoPossible) result.push_back(Islands[elmt]);
+                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
             }
         }
@@ -356,7 +467,13 @@ bool HashiGrid::AskForValidation(){
 
 bool HashiGrid::SelfValidate(){
 
+    #ifdef HASHI_VERBOSE
+    cout << "Trying to validate with construction : " << endl;
+    for(Bridge b : BacktrackStack){
+        cout << b.island1->ID << " --> " << b.island2->ID << endl;
+    }
     ++leafs;
+    #endif
 
     struct Node_t{
         vector<int> links;
