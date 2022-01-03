@@ -23,6 +23,8 @@ public:
     HashiGrid(const std::string& filename);
     ~HashiGrid();
 
+    void CreateAdaptedGrid(const nlohmann::json& jsonGrid);
+
     bool Solve(uint depth);
     void Backtrack(uint depth);
     void Build(Bridge bridge);

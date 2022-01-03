@@ -1,6 +1,8 @@
 
 #include "Island.hpp"
+#include <iostream>
 
+using namespace std;
 
 Island::Island(uint population, GridCoords coords, HashiGrid* grid, uint id){
 
@@ -9,6 +11,8 @@ Island::Island(uint population, GridCoords coords, HashiGrid* grid, uint id){
     Coords = coords;
     Grid = grid;
     ID = id;
+
+    cout << "Island " << id << " created with " << population << " members !" << endl;
 
 }
 

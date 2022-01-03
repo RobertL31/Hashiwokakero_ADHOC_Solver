@@ -21,31 +21,113 @@ const string serverIP = "127.0.0.1:";
 const string serverPort = "50500";
 
 
+
 HashiGrid::HashiGrid(const json& jsonGrid){
 
+/*
     N = jsonGrid["dimension"];
     M = N;
     Grid = new int[N * M];
-    BacktrackStack = vector<Bridge>();
+*/
 
+    BacktrackStack = vector<Bridge>();
+    
+    CreateAdaptedGrid(jsonGrid);
+}
+
+
+
+void HashiGrid::CreateAdaptedGrid(const json& jsonGrid){
+    
     json description = jsonGrid["description"];
-    // TODO guard description.size() == N*M
+    
     for(auto& tileValue : description){
         if(tileValue.get<int>() > 0) ++NumberOfIslands;
     }
+
     Islands = new Island*[NumberOfIslands];
-    int i = 0;
+    set<uint> rowsToAdd;
+    set<uint> colsToAdd;
     NumberOfIslands = 0;
+
+    uint index = 0;
+    uint tmpN = jsonGrid["dimension"];
+    uint tmpM = tmpN;
+    int* tmpGrid = new int[tmpN*tmpM]; 
+
     for(auto& tileValue : description){
         uint population = tileValue.get<int>();
         if(population > 0){
-            Grid[i] = NumberOfIslands;
-            Islands[NumberOfIslands] = new Island(population, GridCoords(i/M, i%M), this, NumberOfIslands);
+            tmpGrid[index] = population;
             ++NumberOfIslands;
-        } else Grid[i] = WATER;
+        } else tmpGrid[index] = WATER;
 
-        ++i;
+        ++index;
     }
+
+
+   for(uint i=0; i<tmpN; ++i){
+        for(int j=0; j<tmpM; ++j){
+            if(tmpGrid[i*tmpM + j] >= 0){
+                if(i != tmpN-1 && tmpGrid[(i+1) * tmpM + j] >= 0) rowsToAdd.insert(i+1);
+                if(j != tmpM-1 && tmpGrid[i * tmpM + j + 1] >= 0) colsToAdd.insert(j+1);
+            }
+        }
+    }
+
+    set<uint> arrangedRowsToAdd;
+    set<uint> arrangedColsToAdd;
+    uint accumulator = 0;
+    for(uint row : rowsToAdd){
+        arrangedRowsToAdd.insert(row+accumulator);
+        ++accumulator;
+    }
+    accumulator = 0;
+    for(uint col : colsToAdd){
+        arrangedColsToAdd.insert(col+accumulator);
+        ++accumulator;
+    }
+
+    #ifdef HASHI_VERBOSE
+    cout << "rows to add :";
+    for(uint row : arrangedRowsToAdd){
+        cout << row << " - ";
+    }
+    cout << endl;
+    cout << "cols to add :";
+    for(uint col : arrangedColsToAdd){
+        cout << col << " - ";
+    }
+    cout << endl;
+    #endif
+
+    
+    M = tmpM + colsToAdd.size();
+    N = tmpN + rowsToAdd.size();
+    Grid = new int[M*N];
+
+    uint baseIndex = 0;
+    NumberOfIslands = 0;
+    for(int newIndex=0; newIndex<M*N; ++newIndex){
+        if( find(arrangedRowsToAdd.begin(), arrangedRowsToAdd.end(), newIndex/M) != arrangedRowsToAdd.end() ){
+            do {
+                Grid[newIndex++] = WATER;
+            } while(newIndex%M != 0);
+            --newIndex;
+        } else {
+            if( find(arrangedColsToAdd.begin(), arrangedColsToAdd.end(), newIndex%M) != arrangedColsToAdd.end() ){
+                Grid[newIndex] = WATER;
+            } else {
+                if(tmpGrid[baseIndex] > 0){
+                    Islands[NumberOfIslands] = new Island(tmpGrid[baseIndex], GridCoords(newIndex/M, newIndex%M), this, NumberOfIslands);
+                    Grid[newIndex] = NumberOfIslands++;
+                } else Grid[newIndex] = WATER;
+                ++baseIndex;
+            }
+        } 
+    }
+
+    free(tmpGrid);
 }
 
 
@@ -211,7 +293,7 @@ long leafs = 0;
 
 bool HashiGrid::Solve(uint depth){
 
-    //if(nodes >  20) return false;
+    
 
     /////////// SIMPLIFY THE GRID //////////////
     // Many simplifications can be done at a certain depth.
@@ -224,6 +306,7 @@ bool HashiGrid::Solve(uint depth){
         }
 
         couldSimplify = Simplify(depth);
+        if(couldSimplify) cout << *this << endl;
 
     } while(couldSimplify);  
     ////////////////////////////////////////////
@@ -381,9 +464,9 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     for(int i=coords.i-1; i>=0; --i){
         int elmt = Grid[i * M + coords.j];
         if(elmt == NORTH) twoPossible = false;
-        else if(elmt == DNORTH) break;
+        else if(elmt == DNORTH || elmt == WEST || elmt == DWEST) break;
         else {
-            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
+            if(elmt != WATER && elmt != NORTH && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
@@ -397,9 +480,9 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     for(int i=coords.i+1; i<N; ++i){
         int elmt = Grid[i * M + coords.j];
         if(elmt == NORTH) twoPossible = false;
-        else if(elmt == DNORTH) break;
+        else if(elmt == DNORTH || elmt == WEST || elmt == DWEST) break;
         else {
-            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
+            if(elmt != WATER && elmt != NORTH && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
@@ -413,9 +496,9 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     for(int j=coords.j-1; j>=0; --j){
         int elmt = Grid[coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
-        else if(elmt == DWEST) break;
+        else if(elmt == DWEST || elmt == NORTH || elmt == DNORTH) break;
         else {
-            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
+            if(elmt != WATER && elmt != WEST && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
@@ -429,9 +512,9 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
     for(int j=coords.j+1; j<M; ++j){
         int elmt = Grid[coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
-        else if(elmt == DWEST) break;
+        else if(elmt == DWEST || elmt == NORTH || elmt == DNORTH) break;
         else {
-            if(elmt >= 0 && Islands[elmt]->BridgeLeft > 0){
+            if(elmt != WATER && elmt != WEST && Islands[elmt]->BridgeLeft > 0){
                 result.push_back(Islands[elmt]);
                 if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
                 break;
@@ -557,7 +640,9 @@ void HashiGrid::PrettyPrint(std::ostream& stream) const{
                     break;
 
                 default:
-                    stream << elmt;
+                    if(elmt < 10)
+                        stream << elmt;
+                    else stream << (char)('a' + elmt - 10);
             }
         }
         stream << endl;
