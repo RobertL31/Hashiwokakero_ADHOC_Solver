@@ -12,8 +12,9 @@ Island::Island(uint population, GridCoords coords, HashiGrid* grid, uint id){
     Grid = grid;
     ID = id;
 
+    #ifdef HASHI_VERBOSE
     cout << "Island " << id << " created with " << population << " members !" << endl;
-
+    #endif
 }
 
 
@@ -26,7 +27,7 @@ void Island::UpdateReachableIslands(){
 
     ReachableIslands.clear();
     if(BridgeLeft > 0){
-        ReachableIslands = Grid->ReachableIslandsFrom(Coords);
+        ReachableIslands = Grid->ReachableIslandsFrom(this);
     }
     
 }

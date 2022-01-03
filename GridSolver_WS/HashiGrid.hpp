@@ -31,7 +31,7 @@ public:
     void DestroyLast();
 
     std::vector<Bridge> GetBuildableBridges(uint depth);
-    std::vector<Island*> ReachableIslandsFrom(GridCoords coords);
+    std::vector<Island*> ReachableIslandsFrom(Island* island);
     bool AskForValidation();
     bool SelfValidate();
     void BuildSolution(nlohmann::json& outJson);

@@ -24,12 +24,6 @@ const string serverPort = "50500";
 
 HashiGrid::HashiGrid(const json& jsonGrid){
 
-/*
-    N = jsonGrid["dimension"];
-    M = N;
-    Grid = new int[N * M];
-*/
-
     BacktrackStack = vector<Bridge>();
     
     CreateAdaptedGrid(jsonGrid);
@@ -317,7 +311,9 @@ bool HashiGrid::Solve(uint depth){
         }
 
         couldSimplify = Simplify(depth);
+        #ifdef HASHI_VERBOSE
         if(couldSimplify) cout << *this << endl;
+        #endif
 
     } while(couldSimplify);  
     ////////////////////////////////////////////
@@ -466,69 +462,82 @@ vector<Bridge> HashiGrid::GetBuildableBridges(uint depth){
 }
 
 
-std::vector<Island*> HashiGrid::ReachableIslandsFrom(GridCoords coords){
+std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
 
     std::vector<Island*> result;
 
     // Explore North
-    bool twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
-    for(int i=coords.i-1; i>=0; --i){
-        int elmt = Grid[i * M + coords.j];
+    //cout << "coords are " << island->Coords.i << "," << island->Coords.j << endl;
+    bool twoPossible = island->BridgeLeft > 1;
+    for(int i=island->Coords.i-1; i>=0; --i){
+        int elmt = Grid[i * M + island->Coords.j];
         if(elmt == NORTH) twoPossible = false;
         else if(elmt == DNORTH || elmt == WEST || elmt == DWEST) break;
         else {
-            if(elmt != WATER && elmt != NORTH && Islands[elmt]->BridgeLeft > 0){
-                result.push_back(Islands[elmt]);
-                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
-                break;
+            Island* destination = Islands[elmt];
+            if(elmt != WATER && elmt != NORTH && destination->BridgeLeft > 0){
+                if( ! (island->Population == 1 && destination->Population == 1) ){
+                    result.push_back(destination);
+                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                    break;
+                }  
             } 
         }
     }
 
 
     // Explore South
-    twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
-    for(int i=coords.i+1; i<N; ++i){
-        int elmt = Grid[i * M + coords.j];
+    twoPossible = island->BridgeLeft > 1;
+    for(int i=island->Coords.i+1; i<N; ++i){
+        int elmt = Grid[i * M + island->Coords.j];
         if(elmt == NORTH) twoPossible = false;
         else if(elmt == DNORTH || elmt == WEST || elmt == DWEST) break;
         else {
-            if(elmt != WATER && elmt != NORTH && Islands[elmt]->BridgeLeft > 0){
-                result.push_back(Islands[elmt]);
-                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
-                break;
+            Island* destination = Islands[elmt];
+            if(elmt != WATER && elmt != NORTH && destination->BridgeLeft > 0){
+                if( ! (island->Population == 1 && destination->Population == 1) ){
+                    result.push_back(destination);
+                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                    break;
+                }
             }
         }
     }
 
 
     // Explore West
-    twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
-    for(int j=coords.j-1; j>=0; --j){
-        int elmt = Grid[coords.i * M + j];
+    twoPossible = island->BridgeLeft > 1;
+    for(int j=island->Coords.j-1; j>=0; --j){
+        int elmt = Grid[island->Coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
         else if(elmt == DWEST || elmt == NORTH || elmt == DNORTH) break;
         else {
-            if(elmt != WATER && elmt != WEST && Islands[elmt]->BridgeLeft > 0){
-                result.push_back(Islands[elmt]);
-                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
-                break;
+            Island* destination = Islands[elmt];
+            if(elmt != WATER && elmt != WEST && destination->BridgeLeft > 0){
+                if( ! (island->Population == 1 && destination->Population == 1) ){
+                    result.push_back(destination);
+                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                    break;
+                }
             }
         }
     }
 
     
     // Explore East
-    twoPossible = true && Islands[Grid[coords.i * M + coords.j]]->BridgeLeft > 1;
-    for(int j=coords.j+1; j<M; ++j){
-        int elmt = Grid[coords.i * M + j];
+    twoPossible = island->BridgeLeft > 1;
+    for(int j=island->Coords.j+1; j<M; ++j){
+        int elmt = Grid[island->Coords.i * M + j];
         if(elmt == WEST) twoPossible = false;
         else if(elmt == DWEST || elmt == NORTH || elmt == DNORTH) break;
         else {
-            if(elmt != WATER && elmt != WEST && Islands[elmt]->BridgeLeft > 0){
-                result.push_back(Islands[elmt]);
-                if(twoPossible && Islands[elmt]->BridgeLeft > 1) result.push_back(Islands[elmt]);
-                break;
+            Island* destination = Islands[elmt];
+            if(elmt != WATER && elmt != WEST && destination->BridgeLeft > 0){
+                if( ! (island->Population == 1 && destination->Population == 1) ){
+                    result.push_back(destination);
+                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                    break;
+                }
             }
         }
     }
@@ -589,6 +598,8 @@ bool HashiGrid::SelfValidate(){
         }
     }
 
+    #ifdef HASHI_VERBOSE
+    cout << "Created nodeArray is :";
     for(int i=0; i<NumberOfIslands; ++i){
         cout << "For island " << i << " : ";
         for(uint dest : nodeArray[i].links){
@@ -596,6 +607,7 @@ bool HashiGrid::SelfValidate(){
         }
         cout << endl;
     }
+    #endif
     // Check if all island can reach others
     int reached = 0;
     queue<Node_t*> toCheck;
@@ -659,7 +671,7 @@ void HashiGrid::PrettyPrint(std::ostream& stream) const{
                 default:
                     if(elmt < 10)
                         stream << elmt;
-                    else stream << (char)('a' + elmt - 10);
+                    else stream << (char)('A' + elmt - 10);
             }
         }
         stream << endl;
