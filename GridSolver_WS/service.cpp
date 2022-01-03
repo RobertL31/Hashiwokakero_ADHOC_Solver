@@ -38,6 +38,8 @@ public:
 
         hashi->Solve(0);
 
+        cout << "\n\n\n Solved grid is :" << endl;
+
         cout << *hashi << endl;
 
         json outJson;

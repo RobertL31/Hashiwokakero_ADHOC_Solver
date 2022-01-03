@@ -149,7 +149,7 @@ HashiGrid::~HashiGrid(){
 
 void MyError(){
     int* a = (int*) malloc(sizeof(int));
-    a[-1] = 0;
+    a[-321321] = 0;
 }
 
 void HashiGrid::Build(Bridge bridge){
@@ -220,11 +220,22 @@ void HashiGrid::Backtrack(uint depth){
 
     #ifdef HASHI_VERBOSE
     cout << "Backtracking to a depth of " << depth << endl;
+    cout << "Backtrack stack is :";
+    for(Bridge b : BacktrackStack){
+        cout << b.island1->ID << " --> " << b.island2->ID << " | depth : " << b.depth << endl;
+    }
     #endif
 
-    while(BacktrackStack.back().depth == depth){
+    while(BacktrackStack.back().depth != depth){
         DestroyLast();
     }
+
+    #ifdef HASHI_VERBOSE
+    cout << "Backtrack stack is :";
+    for(Bridge b : BacktrackStack){
+        cout << b.island1->ID << " --> " << b.island2->ID << " | depth : " << b.depth << endl;
+    }
+    #endif
 }
 
 
@@ -313,7 +324,7 @@ bool HashiGrid::Solve(uint depth){
     
     vector<Bridge> buildableBridges;
     // Computes possible moves
-    buildableBridges = GetBuildableBridges(depth);
+    buildableBridges = GetBuildableBridges(depth+1);
     
     #ifdef HASHI_VERBOSE
     ++nodes;
@@ -559,7 +570,7 @@ bool HashiGrid::SelfValidate(){
     #endif
 
     struct Node_t{
-        vector<int> links;
+        vector<uint> links;
         bool marked;
     };
 
@@ -578,7 +589,13 @@ bool HashiGrid::SelfValidate(){
         }
     }
 
-
+    for(int i=0; i<NumberOfIslands; ++i){
+        cout << "For island " << i << " : ";
+        for(uint dest : nodeArray[i].links){
+            cout << dest << " - "; 
+        }
+        cout << endl;
+    }
     // Check if all island can reach others
     int reached = 0;
     queue<Node_t*> toCheck;
@@ -587,7 +604,7 @@ bool HashiGrid::SelfValidate(){
     while(toCheck.size() != 0){
         Node_t* actual = toCheck.front();
         if( !actual->marked){
-            for(const int& next : actual->links){
+            for(uint next : actual->links){
                 toCheck.push(&nodeArray[next]);
             }
             actual->marked = true;
