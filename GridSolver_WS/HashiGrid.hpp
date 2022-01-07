@@ -3,6 +3,7 @@
 
 #include "json.hpp"
 #include "Island.hpp"
+#include "HashiState.hpp"
 
 #include <string>
 #include <stack>
@@ -10,7 +11,7 @@
 struct Bridge;
 class Island;
 struct GridCoords;
-
+class HashiState;
 
 class HashiGrid {
 
@@ -47,6 +48,10 @@ public:
         return stream;
     }
 
+public:
+
+    uint NumberOfIslands;
+
 private:
 
     // 1 dimension for efficiency purpose
@@ -55,7 +60,9 @@ private:
     uint M;
     std::vector<Bridge> BacktrackStack;
     Island** Islands;
-    uint NumberOfIslands;
+
+    HashiState* BinaryState;
+    
 
 };
 

@@ -26,6 +26,7 @@ HashiGrid::HashiGrid(const json& jsonGrid){
 
     BacktrackStack = vector<Bridge>();
     
+    
     CreateAdaptedGrid(jsonGrid);
 }
 
