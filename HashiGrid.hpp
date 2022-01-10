@@ -65,7 +65,7 @@ private:
     std::vector<Bridge> BacktrackStack;
     Island** Islands;
 
-    std::unordered_set<HashiState*, std::hash<HashiState*>, HashiStateEqual> VisitedStates;
+    //std::unordered_set<HashiState*, std::hash<HashiState*>, HashiStateEqual> VisitedStates;
     HashiState* CurrentState;
 
 };
