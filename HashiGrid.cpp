@@ -7,7 +7,6 @@
 #include <pistache/net.h>
 
 #include <set>
-#include <unordered_set>
 #include <queue>
 #include <iostream>
 
@@ -25,9 +24,10 @@ const string serverPort = "50500";
 HashiGrid::HashiGrid(const json& jsonGrid){
 
     BacktrackStack = vector<Bridge>();
-    
-    
+    CurrentState = new HashiState(this);
+
     CreateAdaptedGrid(jsonGrid);
+
 }
 
 
@@ -139,6 +139,11 @@ HashiGrid::~HashiGrid(){
         delete Islands[i];
     }
     delete[] Islands;
+    
+    for(HashiState* state : VisitedStates){
+        delete state;
+    }
+    delete CurrentState;
 }
 
 
@@ -156,6 +161,9 @@ void HashiGrid::Build(Bridge bridge){
     || bridge.island2->BridgeLeft > 8 || bridge.island2->BridgeLeft == 0){
         MyError();
     }
+
+    // Update current binaryState
+    CurrentState->UpdateByBuild(bridge);
 
     // Update islands informations
     bridge.island1->BridgeLeft--;
@@ -211,6 +219,12 @@ void HashiGrid::Build(Bridge bridge){
 }
 
 
+void HashiGrid::StoreCurrentState(){
+    VisitedStates.insert(CurrentState);
+    CurrentState = new HashiState(CurrentState);
+}
+
+
 void HashiGrid::Backtrack(uint depth){
 
     #ifdef HASHI_VERBOSE
@@ -222,6 +236,7 @@ void HashiGrid::Backtrack(uint depth){
     #endif
 
     while(BacktrackStack.back().depth != depth){
+        StoreCurrentState();
         DestroyLast();
     }
 
@@ -240,6 +255,9 @@ void HashiGrid::DestroyLast(){
     Bridge bridge = BacktrackStack.back();
     BacktrackStack.pop_back();
 
+    // Update current binaryState
+    CurrentState->UpdateByDestroy(bridge);
+    
     // Update islands informations
     bridge.island1->BridgeLeft++;
     bridge.island2->BridgeLeft++;
@@ -299,8 +317,9 @@ long leafs = 0;
 
 bool HashiGrid::Solve(uint depth){
 
-    
-
+    if( VisitedStates.find(CurrentState) != VisitedStates.end()){
+        return false;
+    }
     /////////// SIMPLIFY THE GRID //////////////
     // Many simplifications can be done at a certain depth.
     // It allows backtrack to remove all of them we getting back to previous depth.
@@ -315,6 +334,10 @@ bool HashiGrid::Solve(uint depth){
         #ifdef HASHI_VERBOSE
         if(couldSimplify) cout << *this << endl;
         #endif
+
+        if( VisitedStates.find(CurrentState) != VisitedStates.end()){
+            return false;
+        }
 
     } while(couldSimplify);  
     ////////////////////////////////////////////

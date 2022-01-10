@@ -55,16 +55,15 @@ public:
 
     HashiMemoryCell* Memory;
     uint NumberOfCells;
-
     
 };
+
 
 struct HashiStateEqual{
     bool operator () ( HashiState const * lhs, HashiState const * rhs ) const {
         return *lhs == *rhs;
     }
 };
-
 
 
 #endif

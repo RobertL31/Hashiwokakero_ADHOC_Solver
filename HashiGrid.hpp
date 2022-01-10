@@ -7,11 +7,14 @@
 
 #include <string>
 #include <stack>
+#include <unordered_set>
 
 struct Bridge;
 class Island;
 struct GridCoords;
 class HashiState;
+
+
 
 class HashiGrid {
 
@@ -30,6 +33,7 @@ public:
     void Backtrack(uint depth);
     void Build(Bridge bridge);
     void DestroyLast();
+    void StoreCurrentState();
 
     std::vector<Bridge> GetBuildableBridges(uint depth);
     std::vector<Island*> ReachableIslandsFrom(Island* island);
@@ -61,7 +65,8 @@ private:
     std::vector<Bridge> BacktrackStack;
     Island** Islands;
 
-    HashiState* BinaryState;
+    std::unordered_set<HashiState*, std::hash<HashiState*>, HashiStateEqual> VisitedStates;
+    HashiState* CurrentState;
 
 };
 
