@@ -2,21 +2,49 @@
 #define __HASHISTATE_H__
 
 #include "HashiGrid.hpp"
+#include "Island.hpp"
 
-#define HASHI_MEMORY_WATER 0b00;
-#define HASHI_MEMORY_SIMPLE 0b01;
-#define HASHI_MEMORY_DOUBLE 0b10;
+#define HASHI_MEMORY_WATER 0b00
+#define HASHI_MEMORY_SIMPLE 0b01
+#define HASHI_MEMORY_DOUBLE 0b10
+
+class Island;
+class HashiGrid;
+struct Bridge;
 
 struct HashiMemoryCell{
     unsigned char island1Bottom : 2;
     unsigned char island1Right : 2;
     unsigned char island2Bottom : 2;
-    unsigned char island2Bottom : 2;
-}
+    unsigned char island2Right : 2;
+
+    bool operator==(const HashiMemoryCell& other){
+        return island1Bottom == other.island1Bottom
+        && island1Right == other.island1Right
+        && island2Bottom == other.island2Bottom
+        && island2Right == other.island2Right;
+    }
+};
+
 
 class HashiState {
 
+public:
+
     HashiState(HashiGrid* grid);
+    HashiState(HashiState* source);
+
+    friend bool operator==(const HashiState& memory1, const HashiState& memory2){
+        
+        bool out;
+        for(int i=0; i<memory1.NumberOfCells; ++i){
+            out = out && memory1.Memory[i] == memory2.Memory[i];
+        }
+
+        return out;
+    }
+
+    void PrettyPrint();
     Island* GetTopLeftIsland(Island* island1, Island* island2, bool* horizontalBridge);
 
     // Update functions could be merged, by adding boolean argument for build/destroy
@@ -25,7 +53,15 @@ class HashiState {
 
     HashiMemoryCell* Memory;
     uint NumberOfCells;
-}
+
+    
+};
+
+struct HashiStateEqual{
+    bool operator () ( HashiState const * lhs, HashiState const * rhs ) const {
+        return *lhs == *rhs;
+    }
+};
 
 
 

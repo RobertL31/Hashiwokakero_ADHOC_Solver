@@ -62,7 +62,6 @@ private:
     Island** Islands;
 
     HashiState* BinaryState;
-    
 
 };
 
