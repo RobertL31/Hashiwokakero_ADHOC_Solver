@@ -32,6 +32,8 @@ class HashiState {
 public:
 
     HashiState(HashiGrid* grid);
+
+    // Copy constructor
     HashiState(HashiState* source);
 
     friend bool operator==(const HashiState& memory1, const HashiState& memory2){
