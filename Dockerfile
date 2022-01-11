@@ -25,10 +25,10 @@ RUN apt install -y libpistache-dev
 ############################
 
 RUN apt install -y g++
-RUN g++ -std=c++17 service.cpp -lpistache -o service
+RUN g++ -std=c++17 HashiGrid.cpp HashiState.cpp Island.cpp service.cpp -lpistache -o solver
 
 ############################
 # Run application on start #
 ############################
 
-CMD "./service"
+CMD "./solver"
