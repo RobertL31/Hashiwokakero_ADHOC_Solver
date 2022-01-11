@@ -34,7 +34,7 @@ public:
     HashiGrid(const std::string& filename);
     ~HashiGrid();
 
-    void CreateAdaptedGrid(const nlohmann::json& jsonGrid);
+    void CreateAdaptedGrid();
 
     bool Solve(uint depth);
     void Backtrack(uint depth);

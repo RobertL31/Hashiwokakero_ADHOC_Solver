@@ -34,6 +34,7 @@ public:
             return;
         }
 
+        //HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
         HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
         cout << *hashi << endl;
 

@@ -9,6 +9,7 @@
 #include <set>
 #include <queue>
 #include <iostream>
+#include <fstream>
 
 
 using namespace std;
@@ -23,45 +24,41 @@ const string serverPort = "50500";
 
 HashiGrid::HashiGrid(const json& jsonGrid){
 
-    cout << "creating hashiGrid" << endl;
     BacktrackStack = vector<Bridge>();
 
-    CreateAdaptedGrid(jsonGrid);
+    json description = jsonGrid["description"];
+    N = jsonGrid["dimension"];
+    M = N;
+
+    Grid = new int[N*M]; 
+
+    NumberOfIslands = 0;
+    uint index = 0;
+    for(auto& tileValue : description){
+        uint population = tileValue.get<int>();
+        if(population > 0){
+            Grid[index] = population;
+            ++NumberOfIslands;
+        } else Grid[index] = WATER;
+
+        ++index;
+    }
+
+    Islands = new Island*[NumberOfIslands];
+
+    CreateAdaptedGrid();
     CurrentState = new HashiState(this);
 }
 
 
 
-void HashiGrid::CreateAdaptedGrid(const json& jsonGrid){
+void HashiGrid::CreateAdaptedGrid(){
     
-    cout << "creating adapted grid" << endl;
-    json description = jsonGrid["description"];
-    
-    NumberOfIslands = 0;
-    for(auto& tileValue : description){
-        if(tileValue.get<int>() > 0) ++NumberOfIslands;
-    }
-
-    Islands = new Island*[NumberOfIslands];
     set<uint> rowsToAdd;
     set<uint> colsToAdd;
-    NumberOfIslands = 0;
-
-    uint index = 0;
-    uint tmpN = jsonGrid["dimension"];
-    uint tmpM = tmpN;
-    int* tmpGrid = new int[tmpN*tmpM]; 
-
-    for(auto& tileValue : description){
-        uint population = tileValue.get<int>();
-        if(population > 0){
-            tmpGrid[index] = population;
-            ++NumberOfIslands;
-        } else tmpGrid[index] = WATER;
-
-        ++index;
-    }
-
+    uint tmpN = N;
+    uint tmpM = M;
+    int* tmpGrid = Grid; 
 
    for(uint i=0; i<tmpN; ++i){
         for(int j=0; j<tmpM; ++j){
@@ -130,7 +127,28 @@ void HashiGrid::CreateAdaptedGrid(const json& jsonGrid){
 
 HashiGrid::HashiGrid(const string& filename){
 
-    //TODO
+    ifstream csvFile;
+    csvFile.open (filename);
+    csvFile >> N;
+    csvFile >> M;
+    Grid = new int[N*M];
+    uint actualNumber;
+    for(int i=0; i<N; ++i){
+        for(int j=0; j<M; ++j){
+            csvFile >> actualNumber;
+            if(actualNumber > 0) ++NumberOfIslands;
+            Grid[i * M + j] = actualNumber;
+        }
+    }
+
+    
+    csvFile.close();
+
+    BacktrackStack = vector<Bridge>();
+    Islands = new Island*[NumberOfIslands];
+
+    CreateAdaptedGrid();
+    CurrentState = new HashiState(this);
 
 }
 
@@ -502,7 +520,8 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != NORTH && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) ){
+                if( ! (island->Population == 1 && destination->Population == 1) 
+                    && ! (island->Population == 2 && destination->Population == 2)){
                     result.push_back(destination);
                     if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
                     break;
@@ -521,7 +540,8 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != NORTH && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) ){
+                if( ! (island->Population == 1 && destination->Population == 1) 
+                    && ! (island->Population == 2 && destination->Population == 2)){
                     result.push_back(destination);
                     if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
                     break;
@@ -540,7 +560,8 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != WEST && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) ){
+                if( ! (island->Population == 1 && destination->Population == 1) 
+                    && ! (island->Population == 2 && destination->Population == 2)){
                     result.push_back(destination);
                     if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
                     break;
@@ -559,7 +580,8 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != WEST && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) ){
+                if( ! (island->Population == 1 && destination->Population == 1) 
+                    && ! (island->Population == 2 && destination->Population == 2)){
                     result.push_back(destination);
                     if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
                     break;
