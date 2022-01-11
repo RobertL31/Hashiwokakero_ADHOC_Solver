@@ -131,6 +131,7 @@ HashiGrid::HashiGrid(const string& filename){
     csvFile.open (filename);
     csvFile >> N;
     csvFile >> M;
+    cout << "n :" << N << "m :" << M << endl;
     Grid = new int[N*M];
     uint actualNumber;
     for(int i=0; i<N; ++i){
