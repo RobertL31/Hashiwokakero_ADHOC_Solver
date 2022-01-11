@@ -134,6 +134,8 @@ HashiGrid::HashiGrid(const string& filename){
     cout << "n :" << N << "m :" << M << endl;
     Grid = new int[N*M];
     uint actualNumber;
+    // Get rid of island number
+    csvFile >> actualNumber;
     for(int i=0; i<N; ++i){
         for(int j=0; j<M; ++j){
             csvFile >> actualNumber;

@@ -35,7 +35,7 @@ public:
         }
 
         HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
-        //HashiGrid* hashi = new HashiGrid(std::string("Hashi_Puzzles/100/Hs_16_100_25_00_001.has"));
+        //HashiGrid* hashi = new HashiGrid(std::string("Hashi_Puzzles/100/Hs_16_100_25_00_002.has"));
         cout << *hashi << endl;
 
         hashi->Solve(0);
