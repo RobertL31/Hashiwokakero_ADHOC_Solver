@@ -35,7 +35,7 @@ public:
         }
 
         HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
-        //HashiGrid* hashi = new HashiGrid(std::string("Hashi_Puzzles/100/Hs_16_100_25_00_008.has"));
+        //HashiGrid* hashi = new HashiGrid(std::string("Hashi_Puzzles/100/Hs_16_100_25_00_001.has"));
         cout << *hashi << endl;
 
         hashi->Solve(0);
@@ -55,7 +55,7 @@ public:
 
 int main()
 {   
-    Pistache::Address addr(Pistache::Ipv4::any(), Pistache::Port(50501));
+    Pistache::Address addr(Pistache::Ipv4::any(), Pistache::Port(50003));
     auto opts = Pistache::Http::Endpoint::options()
                     .threads(1);
 
@@ -63,6 +63,6 @@ int main()
     server.init(opts);
     server.setHandler(Http::make_handler<BasicHandler>());
 
-    cout << "Server listening on PORT 50501 : " << endl;
+    cout << "Server listening on PORT 50003 : " << endl;
     server.serve();
 }
