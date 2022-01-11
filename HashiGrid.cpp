@@ -23,19 +23,21 @@ const string serverPort = "50500";
 
 HashiGrid::HashiGrid(const json& jsonGrid){
 
+    cout << "creating hashiGrid" << endl;
     BacktrackStack = vector<Bridge>();
-    CurrentState = new HashiState(this);
 
     CreateAdaptedGrid(jsonGrid);
-
+    CurrentState = new HashiState(this);
 }
 
 
 
 void HashiGrid::CreateAdaptedGrid(const json& jsonGrid){
     
+    cout << "creating adapted grid" << endl;
     json description = jsonGrid["description"];
     
+    NumberOfIslands = 0;
     for(auto& tileValue : description){
         if(tileValue.get<int>() > 0) ++NumberOfIslands;
     }
@@ -140,12 +142,10 @@ HashiGrid::~HashiGrid(){
     }
     delete[] Islands;
     
-    /*
     for(HashiState* state : VisitedStates){
         delete state;
     }
     delete CurrentState;
-    */
 }
 
 
@@ -222,7 +222,7 @@ void HashiGrid::Build(Bridge bridge){
 
 
 void HashiGrid::StoreCurrentState(){
-    //VisitedStates.insert(CurrentState);
+    VisitedStates.insert(CurrentState);
     CurrentState = new HashiState(CurrentState);
 }
 
@@ -238,7 +238,7 @@ void HashiGrid::Backtrack(uint depth){
     #endif
 
     while(BacktrackStack.back().depth != depth){
-        //StoreCurrentState();
+        StoreCurrentState();
         DestroyLast();
     }
 
@@ -319,11 +319,9 @@ long leafs = 0;
 
 bool HashiGrid::Solve(uint depth){
 
-    /*
     if( VisitedStates.find(CurrentState) != VisitedStates.end()){
         return false;
     }
-    */
     /////////// SIMPLIFY THE GRID //////////////
     // Many simplifications can be done at a certain depth.
     // It allows backtrack to remove all of them we getting back to previous depth.
@@ -339,11 +337,9 @@ bool HashiGrid::Solve(uint depth){
         if(couldSimplify) cout << *this << endl;
         #endif
 
-    /*
         if( VisitedStates.find(CurrentState) != VisitedStates.end()){
             return false;
         }
-    */
 
     } while(couldSimplify);  
     ////////////////////////////////////////////

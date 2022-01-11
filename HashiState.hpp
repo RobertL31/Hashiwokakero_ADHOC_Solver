@@ -32,19 +32,12 @@ class HashiState {
 public:
 
     HashiState(HashiGrid* grid);
+    ~HashiState();
 
     // Copy constructor
     HashiState(HashiState* source);
 
-    friend bool operator==(const HashiState& memory1, const HashiState& memory2){
-        
-        bool out;
-        for(int i=0; i<memory1.NumberOfCells; ++i){
-            out = out && memory1.Memory[i] == memory2.Memory[i];
-        }
-
-        return out;
-    }
+    friend bool operator==(const HashiState& memory1, const HashiState& memory2);
 
     void PrettyPrint();
     Island* GetTopLeftIsland(Island* island1, Island* island2, bool* horizontalBridge);
@@ -59,11 +52,7 @@ public:
 };
 
 
-struct HashiStateEqual{
-    bool operator () ( HashiState const * lhs, HashiState const * rhs ) const {
-        return *lhs == *rhs;
-    }
-};
+
 
 
 #endif

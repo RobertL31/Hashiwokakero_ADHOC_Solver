@@ -14,6 +14,13 @@ class Island;
 struct GridCoords;
 class HashiState;
 
+bool operator==(const HashiState& memory1, const HashiState& memory2);
+
+struct HashiStateEqual{
+    bool operator () ( HashiState const * lhs, HashiState const * rhs ) const {
+        return *lhs == *rhs;
+    }
+};
 
 
 class HashiGrid {
@@ -65,7 +72,7 @@ private:
     std::vector<Bridge> BacktrackStack;
     Island** Islands;
 
-    //std::unordered_set<HashiState*, std::hash<HashiState*>, HashiStateEqual> VisitedStates;
+    std::unordered_set<HashiState*, std::hash<HashiState*>, HashiStateEqual> VisitedStates;
     HashiState* CurrentState;
 
 };

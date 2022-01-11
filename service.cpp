@@ -20,6 +20,7 @@ public:
     void onRequest(const Http::Request& request, Http::ResponseWriter response) override
     {
 
+        cout << "Request handles !!" << endl;
         if(request.method() != Http::Method::Post){
             response.send(Pistache::Http::Code::Bad_Request, "Only POST operations with JSON body are accepted\n");
             return;
@@ -47,6 +48,7 @@ public:
 
         delete hashi;
         response.send(Pistache::Http::Code::Ok , outJson.dump());
+        return;
     }
 };
 

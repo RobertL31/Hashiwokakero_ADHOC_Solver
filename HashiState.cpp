@@ -5,6 +5,16 @@
 
 using namespace std;
 
+bool operator==(const HashiState& memory1, const HashiState& memory2){
+        
+    bool out;
+    for(int i=0; i<memory1.NumberOfCells; ++i){
+        out = out && memory1.Memory[i] == memory2.Memory[i];
+    }
+
+    return out;
+}
+
 HashiState::HashiState(HashiGrid* hashi){
 
     // We assume there will never be grid with 0 islands
@@ -13,6 +23,7 @@ HashiState::HashiState(HashiGrid* hashi){
     Memory = (HashiMemoryCell*) malloc(NumberOfCells);
 
     for(int i=0; i<NumberOfCells; ++i){
+        cout << i << endl;
         Memory[i].island1Bottom = HASHI_MEMORY_WATER;
         Memory[i].island1Right = HASHI_MEMORY_WATER;
         Memory[i].island2Bottom = HASHI_MEMORY_WATER;
@@ -29,6 +40,11 @@ HashiState::HashiState(HashiState* source){
     for(int i=0; i<NumberOfCells; ++i){
         Memory[i] = source->Memory[i];
     }
+}
+
+
+HashiState::~HashiState(){
+    free(Memory);
 }
 
 
