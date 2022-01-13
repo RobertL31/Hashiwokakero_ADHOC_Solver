@@ -2,6 +2,7 @@
 #include "json.hpp"
 
 #include <iostream>
+#include <experimental/filesystem>
 #include <string>
 
 
@@ -79,7 +80,6 @@ public:
         
 
         HashiGrid* hashi = new HashiGrid(jsonInput["grid"]);
-        //HashiGrid* hashi = new HashiGrid(std::string("Hashi_Puzzles/100/Hs_16_100_25_00_002.has"));
         cout << *hashi << endl;
 
         json outJson;
@@ -98,16 +98,39 @@ public:
     }
 };
 
-int main()
+int main(int argc, char *argv[])
 {   
-    Pistache::Address addr(Pistache::Ipv4::any(), Pistache::Port(50003));
-    auto opts = Pistache::Http::Endpoint::options()
-                    .threads(1);
+    if(argc == 2){
 
-    Http::Endpoint server(addr);
-    server.init(opts);
-    server.setHandler(Http::make_handler<BasicHandler>());
+        if( !std::experimental::filesystem::is_regular_file(argv[1])){
+            cout << "File couldn't be opened : " << argv[1] << endl;
+            return 1;
+        }
 
-    cout << "Server listening on PORT 50003 : " << endl;
-    server.serve();
+        cout << "A filename has been given, switching to offline mode" << endl;
+
+        HashiGrid* hashi = new HashiGrid(string(argv[1]));
+        cout << *hashi << endl;
+
+        if(hashi->Solve(0)){
+            cout << "\n\n\n Solved grid is :" << endl;
+            cout << *hashi << endl;
+        }
+
+        return 0;
+
+    } else{
+        Pistache::Address addr(Pistache::Ipv4::any(), Pistache::Port(50003));
+        auto opts = Pistache::Http::Endpoint::options()
+                        .threads(1);
+
+        Http::Endpoint server(addr);
+        server.init(opts);
+        server.setHandler(Http::make_handler<BasicHandler>());
+
+        cout << "Server listening on PORT 50003 : " << endl;
+        server.serve();
+    }
+
+    
 }

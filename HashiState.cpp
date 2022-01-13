@@ -23,7 +23,6 @@ HashiState::HashiState(HashiGrid* hashi){
     Memory = (HashiMemoryCell*) malloc(NumberOfCells);
 
     for(int i=0; i<NumberOfCells; ++i){
-        cout << i << endl;
         Memory[i].island1Bottom = HASHI_MEMORY_WATER;
         Memory[i].island1Right = HASHI_MEMORY_WATER;
         Memory[i].island2Bottom = HASHI_MEMORY_WATER;
