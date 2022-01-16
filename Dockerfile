@@ -1,7 +1,7 @@
 
 FROM ubuntu:20.04
 
-EXPOSE 50501
+EXPOSE 50003
 
 RUN apt-get update
 
@@ -14,7 +14,9 @@ WORKDIR /app
 #######################################################
 
 # need software-properties-common for add-apt-repository
-RUN apt-get install -y software-properties-common
+RUN apt update
+RUN apt-get upgrade -y
+RUN apt-get install -y software-properties-common --fix-missing
 RUN add-apt-repository ppa:pistache+team/unstable
 RUN apt update
 RUN apt install -y libpistache-dev
@@ -25,7 +27,7 @@ RUN apt install -y libpistache-dev
 ############################
 
 RUN apt install -y g++
-RUN g++ -std=c++17 HashiGrid.cpp HashiState.cpp Island.cpp service.cpp -lpistache -o solver
+RUN g++ -std=c++17 service.cpp Island.cpp HashiGrid.cpp HashiState.cpp -lpistache -lstdc++fs -o solver
 
 ############################
 # Run application on start #
