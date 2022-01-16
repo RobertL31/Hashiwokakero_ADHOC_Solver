@@ -522,12 +522,11 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != NORTH && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) 
-                    && ! (island->Population == 2 && destination->Population == 2)){
-                    result.push_back(destination);
-                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
-                    break;
-                }  
+                if(island->Population == 1 && destination->Population == 1) break;
+                if(island->Population == 2 && destination->Population == 2) twoPossible = false;
+                result.push_back(destination);
+                if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                break;
             } 
         }
     }
@@ -542,12 +541,11 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != NORTH && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) 
-                    && ! (island->Population == 2 && destination->Population == 2)){
-                    result.push_back(destination);
-                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
-                    break;
-                }
+                if(island->Population == 1 && destination->Population == 1) break;
+                if(island->Population == 2 && destination->Population == 2) twoPossible = false;
+                result.push_back(destination);
+                if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                break;
             }
         }
     }
@@ -562,12 +560,11 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != WEST && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) 
-                    && ! (island->Population == 2 && destination->Population == 2)){
-                    result.push_back(destination);
-                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
-                    break;
-                }
+                if(island->Population == 1 && destination->Population == 1) break;
+                if(island->Population == 2 && destination->Population == 2) twoPossible = false;
+                result.push_back(destination);
+                if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                break;
             }
         }
     }
@@ -582,12 +579,11 @@ std::vector<Island*> HashiGrid::ReachableIslandsFrom(Island* island){
         else {
             Island* destination = Islands[elmt];
             if(elmt != WATER && elmt != WEST && destination->BridgeLeft > 0){
-                if( ! (island->Population == 1 && destination->Population == 1) 
-                    && ! (island->Population == 2 && destination->Population == 2)){
-                    result.push_back(destination);
-                    if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
-                    break;
-                }
+                if(island->Population == 1 && destination->Population == 1) break;
+                if(island->Population == 2 && destination->Population == 2) twoPossible = false;
+                result.push_back(destination);
+                if(twoPossible && destination->BridgeLeft > 1) result.push_back(destination);
+                break;
             }
         }
     }
@@ -621,6 +617,7 @@ bool HashiGrid::AskForValidation(){
 bool HashiGrid::SelfValidate(){
 
     #ifdef HASHI_VERBOSE
+    
     cout << "Trying to validate with construction : " << endl;
     for(Bridge b : BacktrackStack){
         cout << b.island1->ID << " --> " << b.island2->ID << endl;
