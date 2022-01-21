@@ -1,5 +1,5 @@
-# Hashiwokakero_Services
-Modules implemented for the Hashiwokakero resolution project
+# Hashiwokakero_ADHOC_Solver 
+This solver has been implemented in a grid recognition and resolution project for the Hashiwokakero puzzle. It is a specialized solver, aiming to solve some Hashiwokakero grid with an explicit internal representation.
 
 # Compiling the project 
 g++ -std=c++17 service.cpp Island.cpp HashiGrid.cpp HashiState.cpp -lpistache -lstdc++fs -o solver
@@ -62,3 +62,8 @@ and the output solution for this puzzle would be
     ]
 }
 ```
+
+# Improvements
+This solver could be greatly improved. Actually, when updating possible bridges, we run an update on each island of the grid, were only a subset of them could be updated.
+Also, the internal representation is really trivial, and aims to represent the grid as a human would see it. An approach based on constraint programming would be way more efficient.
+Finally, the Only Few Neighbors rule has not been implemented yet, which would be a really strong improvement.
