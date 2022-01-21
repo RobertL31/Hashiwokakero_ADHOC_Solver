@@ -20,7 +20,10 @@ The REST API of the solver, once deployed as a service, is developped with Pista
 }
 ```
 
-The dimension field must contain a positive integer greater than 1, and the description field must contain a flat description of the grid, starting from top-left, of size $dimension * dimension$.
+The dimension field must contain a positive integer greater than 1, and the description field must contain a flat description of the grid, starting from top-left, of size dimension * dimension.
+
+The output of the service is a list representing the bridges that have to be built to solve the puzzle. If the given puzzle is not solvable, the returned list of bridges will be empty. The bridges are described as connections between island IDs, which are relative to there apparition order in the input "description" field.
+Also, the same bridge can occur twice in the solution, indicating a double connection between the given islands.
 
 ## Example
 
@@ -41,4 +44,21 @@ would become
     }
 }
 
+```
+
+and the output solution for this puzzle would be 
+
+```json
+{
+    "connections":[
+        [0,1],
+        [1,2],
+        [2,6],
+        [3,5],
+        [4,5],
+        [5,6],
+        [5,6],
+        [6,2]
+    ]
+}
 ```
